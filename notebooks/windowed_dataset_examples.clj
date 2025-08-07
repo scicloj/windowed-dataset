@@ -1,8 +1,5 @@
 (ns windowed-dataset-examples
-  "Examples and demonstrations of windowed dataset functionality.
-  
-  This notebook showcases the core capabilities of the windowed-dataset library
-  for streaming data analysis and time-series processing."
+  "Examples demonstrating windowed dataset functionality for streaming data analysis."
   (:require [scicloj.windowed-dataset.api :as wd]
             [tablecloth.api :as tc]
             [tablecloth.column.api :as tcc]
@@ -12,158 +9,200 @@
 
 ;; # Windowed Dataset Examples
 ;; 
-;; This notebook demonstrates the core functionality of windowed datasets
-;; for streaming data analysis and time-series processing.
+;; This notebook shows how to use windowed datasets for streaming data analysis.
+;; We'll work with temperature sensor data as a relatable example, but the same 
+;; patterns apply to any time-series data.
 
-;; ## Basic Usage
+;; ## The Problem: Streaming Data with Limited Memory
 
-;; Create a simple windowed dataset with timestamp and value columns
-(def sample-column-types
+;; Imagine you're processing temperature readings from sensors. New readings arrive
+;; continuously, but you only care about recent trends and don't want to store
+;; years of historical data in memory.
+;;
+;; Windowed datasets solve this by maintaining a "sliding window" of recent data.
+
+;; ## Basic Setup
+
+;; Let's define our data structure: timestamp, temperature, and sensor location
+(def column-types
   {:timestamp :instant
-   :value :float64
-   :sensor-id :string})
+   :temperature :float64
+   :location :string})
 
-;; Create a windowed dataset with maximum size of 5 records
-(def windowed-ds
-  (wd/make-windowed-dataset sample-column-types 5))
+;; Create a windowed dataset that keeps only the last 5 readings
+(def temperature-buffer
+  (wd/make-windowed-dataset column-types 5))
 
-;; **Initial windowed dataset:**
-windowed-ds
+;; **Initial state - empty buffer:**
+temperature-buffer
 
-;; ## Inserting Data
+;; ## Simulating Streaming Data
 
-;; Let's create some sample time-series data
-(def sample-data
+;; Create sample temperature readings (like data from a greenhouse monitoring system)
+(def sample-readings
   (let [start-time (java-time/instant)]
     (map (fn [i]
-           {:timestamp (java-time/plus start-time (java-time/seconds i))
-            :value (+ 10.0 (* 2.0 (Math/sin (/ i 2.0))))
-            :sensor-id "sensor-1"})
+           {:timestamp (java-time/plus start-time (java-time/seconds (* i 30)))
+            :temperature (+ 22.0 (* 2.0 (Math/sin (/ i 3.0)))) ; Simulated daily variation
+            :location "greenhouse-a"})
          (range 10))))
 
-;; **Sample time-series data (first 5 rows):**
-(tc/dataset (take 5 sample-data))
+;; **Sample data - first 5 readings:**
+(tc/dataset (take 5 sample-readings))
 
-;; Insert data progressively and observe the windowed dataset behavior
-(defn demonstrate-progressive-insertion []
-  (reduce (fn [acc-ds row]
-            (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
-                  regular-ds (wd/windowed-dataset->dataset updated-ds)]
-              (println (str "After inserting row with value " (:value row) ":"))
-              (println (str "  Window size: " (:current-size updated-ds)))
-              (println (str "  Current position: " (:current-position updated-ds)))
-              (println (str "  Data in window: " (vec (:value regular-ds))))
-              (println)
-              updated-ds))
-          windowed-ds
-          (take 8 sample-data)))
+;; ## Watching the Window in Action
 
-;; **Progressive insertion demonstration:**
-(kind/code
- (with-out-str (demonstrate-progressive-insertion)))
-
-;; ## Time Window Functionality
-
-;; Create a windowed dataset with more data for time window examples
-(def full-windowed-ds
-  (reduce wd/insert-to-windowed-dataset! windowed-ds sample-data))
-
-;; **Full windowed dataset converted to regular dataset:**
-(wd/windowed-dataset->dataset full-windowed-ds)
-
-;; Demonstrate time window extraction
-(let [regular-ds (wd/windowed-dataset->dataset full-windowed-ds)
-      latest-time (last (:timestamp regular-ds))]
-  ;; **Time window examples:**
-  {:last-3-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 3000)
-   :last-5-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 5000)
-   :latest-timestamp latest-time})
-
-;; ## Real-time Streaming Simulation
-
-;; Demonstrate how windowed datasets can be used for streaming analysis
-(defn calculate-moving-average [windowed-ds]
-  "Calculate moving average from a windowed dataset"
-  (let [regular-ds (wd/windowed-dataset->dataset windowed-ds)
-        values (:value regular-ds)]
-    (when (seq values)
-      (dfn/mean values))))
-
-;; Simulate streaming analysis with moving averages
-(defn streaming-analysis-demo []
+;; Let's insert data one by one and watch how the window behaves
+(defn show-window-evolution []
   (let [results (atom [])]
-    (reduce (fn [acc-ds row]
-              (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
-                    moving-avg (calculate-moving-average updated-ds)]
-                (swap! results conj {:timestamp (:timestamp row)
-                                     :value (:value row)
-                                     :moving-average moving-avg})
-                updated-ds))
-            windowed-ds
-            sample-data)
+    (reduce (fn [buffer reading]
+              (let [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)
+                    current-data (wd/windowed-dataset->dataset updated-buffer)]
+                (swap! results conj
+                       {:reading-number (count @results)
+                        :buffer-size (:current-size updated-buffer)
+                        :temperatures (vec (:temperature current-data))})
+                updated-buffer))
+            temperature-buffer
+            (take 8 sample-readings))
     @results))
 
-;; **Streaming analysis with moving averages:**
-(tc/dataset (streaming-analysis-demo))
+;; **Window evolution as data arrives:**
+(tc/dataset (show-window-evolution))
 
-;; ## Advanced Example: Progressive Column Addition
+;; Notice how:
+;; - The buffer grows until it reaches maximum size (5)
+;; - After that, old data is automatically discarded to make room for new data
+;; - Memory usage stays constant regardless of how much data we process
 
-;; Demonstrate add-column-by-windowed-fn for batch processing
-(def time-series-data
-  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant) (java-time/seconds %)) (range 10))
-               :value (map #(+ 5.0 (* 3.0 (Math/sin (/ % 1.5)))) (range 10))
-               :noise (repeatedly 10 #(* 0.5 (- (rand) 0.5)))}))
+;; ## Time-Based Windows
 
-;; **Original time series:**
-time-series-data
+;; Often you don't just want the last N readings - you want "all data from the last X minutes"
 
-;; Add progressive moving average column
-(def windowed-moving-avg-fn
-  (fn [windowed-ds]
-    (calculate-moving-average windowed-ds)))
+;; Fill our buffer with all sample data
+(def full-buffer
+  (reduce wd/insert-to-windowed-dataset! temperature-buffer sample-readings))
 
-;; **Time series with progressive moving average:**
-(wd/add-column-by-windowed-fn
- time-series-data
- {:colname :progressive-moving-avg
-  :windowed-fn windowed-moving-avg-fn
-  :windowed-dataset-size 120})
+;; **All data in buffer:**
+(wd/windowed-dataset->dataset full-buffer)
 
-;; ## Performance Characteristics
+;; Extract different time windows
+(let [now (:timestamp (last sample-readings))]
+  {:last-90-seconds (wd/windowed-dataset->time-window-dataset full-buffer :timestamp 90000)
+   :last-150-seconds (wd/windowed-dataset->time-window-dataset full-buffer :timestamp 150000)
+   :reference-time now})
 
-;; Demonstrate that windowed datasets maintain constant memory usage
-(defn memory-usage-demo []
-  (let [large-dataset (map (fn [i]
-                             {:timestamp (java-time/plus (java-time/instant) (java-time/millis i))
-                              :value (rand)
-                              :sensor-id "perf-test"})
-                           (range 1000))
-        windowed-ds-small (wd/make-windowed-dataset sample-column-types 10)
-        windowed-ds-large (wd/make-windowed-dataset sample-column-types 100)]
+;; ## Real-World Pattern: Streaming Analytics
 
-    {:small-window {:max-size 10
-                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-small large-dataset))}
-     :large-window {:max-size 100
-                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-large large-dataset))}
-     :input-data-size (count large-dataset)}))
+;; Here's how you might calculate a running average temperature in a real application
 
-;; **Memory usage demonstration:**
-(memory-usage-demo)
+(defn calculate-average-temperature [buffer]
+  "Calculate current average temperature from buffer"
+  (let [current-data (wd/windowed-dataset->dataset buffer)
+        temperatures (:temperature current-data)]
+    (when (seq temperatures)
+      (dfn/mean temperatures))))
+
+;; Simulate processing readings as they arrive, calculating moving averages
+(defn streaming-analytics-demo []
+  (let [results (atom [])]
+    (reduce (fn [buffer reading]
+              (let [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)
+                    avg-temp (calculate-average-temperature updated-buffer)]
+                (swap! results conj
+                       {:timestamp (:timestamp reading)
+                        :current-temperature (:temperature reading)
+                        :running-average avg-temp
+                        :readings-in-buffer (:current-size updated-buffer)})
+                updated-buffer))
+            temperature-buffer
+            sample-readings)
+    @results))
+
+;; **Streaming analytics results:**
+(tc/dataset (streaming-analytics-demo))
+
+;; ## Historical Analysis: Adding Progressive Features
+
+;; Sometimes you have historical data and want to see how metrics would have
+;; evolved over time, as if you were processing it in real-time.
+
+(def historical-temperatures
+  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant)
+                                                (java-time/seconds %))
+                               (range 12))
+               :temperature (map #(+ 20.0 (* 3.0 (Math/sin (/ % 2.0))))
+                                 (range 12))}))
+
+;; **Original historical data:**
+historical-temperatures
+
+;; Add a progressive moving average column
+(def with-moving-average
+  (wd/add-column-by-windowed-fn
+   historical-temperatures
+   {:colname :progressive-average
+    :windowed-fn calculate-average-temperature
+    :windowed-dataset-size 120}))
+
+;; **Historical data with progressive moving averages:**
+with-moving-average
+
+;; Notice how the moving average starts as nil (no data), then becomes the first value,
+;; then a true average as more data accumulates.
+
+;; ## Memory Efficiency Demo
+
+;; Let's prove that windowed datasets use constant memory regardless of input size
+
+(defn memory-efficiency-test []
+  (let [;; Create lots of data
+        lots-of-data (map (fn [i]
+                            {:timestamp (java-time/plus (java-time/instant)
+                                                        (java-time/millis i))
+                             :temperature (+ 20.0 (rand 10.0))
+                             :location "test-sensor"})
+                          (range 1000))
+
+        ;; Create two buffers of different sizes
+        small-buffer (wd/make-windowed-dataset column-types 10)
+        large-buffer (wd/make-windowed-dataset column-types 100)]
+
+    ;; Process all data through both buffers
+    (let [final-small (reduce wd/insert-to-windowed-dataset! small-buffer lots-of-data)
+          final-large (reduce wd/insert-to-windowed-dataset! large-buffer lots-of-data)]
+
+      {:input-data-size (count lots-of-data)
+       :small-buffer-final-size (:current-size final-small)
+       :large-buffer-final-size (:current-size final-large)
+       :memory-usage "Constant - only depends on buffer size, not input size!"})))
+
+;; **Memory efficiency test:**
+(memory-efficiency-test)
+
+;; ## Practical Applications
+
+;; **Windowed datasets are perfect for:**
+;;
+;; 1. **Real-time monitoring** - Track recent system metrics, sensor readings, or user activity
+;; 2. **Streaming alerts** - Detect anomalies based on recent patterns without storing everything
+;; 3. **Live dashboards** - Show current trends and recent history with bounded memory
+;; 4. **IoT data processing** - Handle continuous sensor streams efficiently
+;; 5. **Financial analysis** - Calculate technical indicators on streaming market data
+;; 6. **ML feature engineering** - Create time-based features for online learning models
+
+;; **Key Benefits:**
+;;
+;; - **Predictable memory usage** - Never grows beyond your specified window size
+;; - **Efficient time queries** - Binary search makes time-based filtering fast
+;; - **Streaming-friendly** - Designed for continuous data processing
+;; - **Seamless integration** - Works naturally with existing Clojure data tools
 
 ;; ## Summary
 
-;; ## Key Benefits of Windowed Datasets
+;; Windowed datasets provide a simple but powerful abstraction for handling streaming
+;; time-series data. By maintaining only recent data, you can build efficient real-time
+;; analytics systems that don't consume unbounded memory.
 ;;
-;; - **Constant Memory Usage**: Fixed-size circular buffer regardless of input stream size
-;; - **Efficient Time Windows**: O(log n) binary search for time-based filtering  
-;; - **Streaming-Friendly**: Designed for real-time data processing
-;; - **Tablecloth Integration**: Seamless conversion to/from regular datasets
-;; - **High Performance**: Built on `tech.ml.dataset` for efficient numeric operations
-;;
-;; ## Common Use Cases
-;;
-;; 1. **Real-time Analytics**: Moving averages, trend detection, anomaly detection
-;; 2. **Streaming ML**: Feature engineering for time-series models
-;; 3. **Sensor Data Processing**: IoT and monitoring applications
-;; 4. **Financial Data**: Technical indicators and risk metrics
-;; 5. **Scientific Computing**: Signal processing and time-series analysis
+;; The key insight is that many analyses only need recent context, not complete history.
+;; Windowed datasets make this pattern explicit and efficient.

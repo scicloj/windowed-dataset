@@ -35,18 +35,18 @@
 ;;            current-position ; current write position (circular index)])
 ;; ```
 
-;; **Key Characteristics:**
+;; **Key characteristics:**
 
-;; - **Mutable** - Use with caution
-;; - **Fixed Memory** - Pre-allocates arrays for maximum performance
-;; - **Circular Buffer** - New data overwrites oldest when buffer is full
-;; - **Chronological Access** - Functions provide data in insertion order
-;; - **Zero-Copy Views** - Time windows are extracted without data copying
+;; - **Mutable** - Designed for performance in streaming scenarios
+;; - **Fixed memory** - Pre-allocates space for predictable memory usage
+;; - **Circular buffer** - Automatically overwrites oldest data when full
+;; - **Chronological access** - Data is always returned in insertion order
+;; - **Zero-copy views** - Time windows are extracted without copying data
 
-;; **Usage Pattern:**
+;; **Typical workflow:**
 
 ;; 1. Create with `make-windowed-dataset` specifying column types and buffer size
-;; 2. Insert streaming data with `insert-to-windowed-dataset!` (❗**Caution: mutating the internal dataset.**)
+;; 2. Insert streaming data with `insert-to-windowed-dataset!` 
 ;; 3. Extract time windows with `windowed-dataset->time-window-dataset`
 ;; 4. Compute metrics over specific time periods
 
