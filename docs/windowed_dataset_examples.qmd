@@ -127,11 +127,11 @@ _unnamed [5 3]:
 
 |                  :timestamp | :temperature |    :location |
 |-----------------------------|-------------:|--------------|
-| 2025-08-07T23:08:09.947935Z |  22.00000000 | greenhouse-a |
-| 2025-08-07T23:08:39.947935Z |  22.65438939 | greenhouse-a |
-| 2025-08-07T23:09:09.947935Z |  23.23673961 | greenhouse-a |
-| 2025-08-07T23:09:39.947935Z |  23.68294197 | greenhouse-a |
-| 2025-08-07T23:10:09.947935Z |  23.94387580 | greenhouse-a |
+| 2025-08-07T23:12:41.239475Z |  22.00000000 | greenhouse-a |
+| 2025-08-07T23:13:11.239475Z |  22.65438939 | greenhouse-a |
+| 2025-08-07T23:13:41.239475Z |  23.23673961 | greenhouse-a |
+| 2025-08-07T23:14:11.239475Z |  23.68294197 | greenhouse-a |
+| 2025-08-07T23:14:41.239475Z |  23.94387580 | greenhouse-a |
 
 
 :::
@@ -207,6 +207,7 @@ _unnamed [8 3]:
 
 
 Notice how:
+
 - The buffer grows until it reaches maximum size (5)
 - After that, old data is automatically discarded to make room for new data
 - Memory usage stays constant regardless of how much data we process
@@ -242,11 +243,11 @@ _unnamed [5 3]:
 
 |                     :timestamp | :temperature |    :location |
 |--------------------------------|-------------:|--------------|
-| 2025-08-07T23:10:39.947935697Z |  23.99081592 | greenhouse-a |
-| 2025-08-07T23:11:09.947935697Z |  23.81859485 | greenhouse-a |
-| 2025-08-07T23:11:39.947935697Z |  23.44617176 | greenhouse-a |
-| 2025-08-07T23:12:09.947935697Z |  22.91454525 | greenhouse-a |
-| 2025-08-07T23:12:39.947935697Z |  22.28224002 | greenhouse-a |
+| 2025-08-07T23:15:11.239475214Z |  23.99081592 | greenhouse-a |
+| 2025-08-07T23:15:41.239475214Z |  23.81859485 | greenhouse-a |
+| 2025-08-07T23:16:11.239475214Z |  23.44617176 | greenhouse-a |
+| 2025-08-07T23:16:41.239475214Z |  22.91454525 | greenhouse-a |
+| 2025-08-07T23:17:11.239475214Z |  22.28224002 | greenhouse-a |
 
 
 :::
@@ -268,8 +269,8 @@ Extract different time windows
 
 ```{=html}
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-90-seconds
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [4 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:11:09.947935697Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:11:39.947935697Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:12:09.947935697Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:12:39.947935697Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-150-seconds
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:10:39.947935697Z</td><td style="text-align:right;">23.99081592</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:11:09.947935697Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:11:39.947935697Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:12:09.947935697Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:12:39.947935697Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:reference-time #inst &quot;2025-08-07T23:12:39.947935697-00:00&quot;</code></pre></div></div><p>}</p></div>
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [4 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:15:41.239475214Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:16:11.239475214Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:16:41.239475214Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:17:11.239475214Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-150-seconds
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:15:11.239475214Z</td><td style="text-align:right;">23.99081592</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:15:41.239475214Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:16:11.239475214Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:16:41.239475214Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:17:11.239475214Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:reference-time #inst &quot;2025-08-07T23:17:11.239475214-00:00&quot;</code></pre></div></div><p>}</p></div>
 ```
 
 
@@ -329,16 +330,16 @@ _unnamed [10 4]:
 
 |                  :timestamp | :current-temperature | :running-average | :readings-in-buffer |
 |-----------------------------|---------------------:|-----------------:|--------------------:|
-| 2025-08-07T23:08:09.947935Z |          22.00000000 |      22.00000000 |                   1 |
-| 2025-08-07T23:08:39.947935Z |          22.65438939 |      22.32719470 |                   2 |
-| 2025-08-07T23:09:09.947935Z |          23.23673961 |      22.63037633 |                   3 |
-| 2025-08-07T23:09:39.947935Z |          23.68294197 |      22.89351774 |                   4 |
-| 2025-08-07T23:10:09.947935Z |          23.94387580 |      23.10358935 |                   5 |
-| 2025-08-07T23:10:39.947935Z |          23.99081592 |      23.50175254 |                   5 |
-| 2025-08-07T23:11:09.947935Z |          23.81859485 |      23.73459363 |                   5 |
-| 2025-08-07T23:11:39.947935Z |          23.44617176 |      23.77648006 |                   5 |
-| 2025-08-07T23:12:09.947935Z |          22.91454525 |      23.62280072 |                   5 |
-| 2025-08-07T23:12:39.947935Z |          22.28224002 |      23.29047356 |                   5 |
+| 2025-08-07T23:12:41.239475Z |          22.00000000 |      22.00000000 |                   1 |
+| 2025-08-07T23:13:11.239475Z |          22.65438939 |      22.32719470 |                   2 |
+| 2025-08-07T23:13:41.239475Z |          23.23673961 |      22.63037633 |                   3 |
+| 2025-08-07T23:14:11.239475Z |          23.68294197 |      22.89351774 |                   4 |
+| 2025-08-07T23:14:41.239475Z |          23.94387580 |      23.10358935 |                   5 |
+| 2025-08-07T23:15:11.239475Z |          23.99081592 |      23.50175254 |                   5 |
+| 2025-08-07T23:15:41.239475Z |          23.81859485 |      23.73459363 |                   5 |
+| 2025-08-07T23:16:11.239475Z |          23.44617176 |      23.77648006 |                   5 |
+| 2025-08-07T23:16:41.239475Z |          22.91454525 |      23.62280072 |                   5 |
+| 2025-08-07T23:17:11.239475Z |          22.28224002 |      23.29047356 |                   5 |
 
 
 :::
@@ -378,18 +379,18 @@ _unnamed [12 2]:
 
 |                  :timestamp | :temperature |
 |-----------------------------|-------------:|
-| 2025-08-07T23:08:09.976828Z |  20.00000000 |
-| 2025-08-07T23:08:10.976879Z |  21.43827662 |
-| 2025-08-07T23:08:11.976883Z |  22.52441295 |
-| 2025-08-07T23:08:12.976885Z |  22.99248496 |
-| 2025-08-07T23:08:13.976887Z |  22.72789228 |
-| 2025-08-07T23:08:14.976889Z |  21.79541643 |
-| 2025-08-07T23:08:15.976891Z |  20.42336002 |
-| 2025-08-07T23:08:16.976893Z |  18.94765032 |
-| 2025-08-07T23:08:17.976895Z |  17.72959251 |
-| 2025-08-07T23:08:18.976897Z |  17.06740965 |
-| 2025-08-07T23:08:19.976899Z |  17.12322718 |
-| 2025-08-07T23:08:20.976900Z |  17.88337902 |
+| 2025-08-07T23:12:41.269228Z |  20.00000000 |
+| 2025-08-07T23:12:42.269278Z |  21.43827662 |
+| 2025-08-07T23:12:43.269280Z |  22.52441295 |
+| 2025-08-07T23:12:44.269282Z |  22.99248496 |
+| 2025-08-07T23:12:45.269283Z |  22.72789228 |
+| 2025-08-07T23:12:46.269285Z |  21.79541643 |
+| 2025-08-07T23:12:47.269287Z |  20.42336002 |
+| 2025-08-07T23:12:48.269288Z |  18.94765032 |
+| 2025-08-07T23:12:49.269290Z |  17.72959251 |
+| 2025-08-07T23:12:50.269291Z |  17.06740965 |
+| 2025-08-07T23:12:51.269292Z |  17.12322718 |
+| 2025-08-07T23:12:52.269294Z |  17.88337902 |
 
 
 :::
@@ -425,18 +426,18 @@ _unnamed [12 3]:
 
 |                  :timestamp | :temperature | :progressive-average |
 |-----------------------------|-------------:|---------------------:|
-| 2025-08-07T23:08:09.976828Z |  20.00000000 |                      |
-| 2025-08-07T23:08:10.976879Z |  21.43827662 |          20.00000000 |
-| 2025-08-07T23:08:11.976883Z |  22.52441295 |          20.71913831 |
-| 2025-08-07T23:08:12.976885Z |  22.99248496 |          21.32089652 |
-| 2025-08-07T23:08:13.976887Z |  22.72789228 |          21.73879363 |
-| 2025-08-07T23:08:14.976889Z |  21.79541643 |          21.93661336 |
-| 2025-08-07T23:08:15.976891Z |  20.42336002 |          21.91308054 |
-| 2025-08-07T23:08:16.976893Z |  18.94765032 |          21.70026332 |
-| 2025-08-07T23:08:17.976895Z |  17.72959251 |          21.35618670 |
-| 2025-08-07T23:08:18.976897Z |  17.06740965 |          20.95323179 |
-| 2025-08-07T23:08:19.976899Z |  17.12322718 |          20.56464957 |
-| 2025-08-07T23:08:20.976900Z |  17.88337902 |          20.25179299 |
+| 2025-08-07T23:12:41.269228Z |  20.00000000 |                      |
+| 2025-08-07T23:12:42.269278Z |  21.43827662 |          20.00000000 |
+| 2025-08-07T23:12:43.269280Z |  22.52441295 |          20.71913831 |
+| 2025-08-07T23:12:44.269282Z |  22.99248496 |          21.32089652 |
+| 2025-08-07T23:12:45.269283Z |  22.72789228 |          21.73879363 |
+| 2025-08-07T23:12:46.269285Z |  21.79541643 |          21.93661336 |
+| 2025-08-07T23:12:47.269287Z |  20.42336002 |          21.91308054 |
+| 2025-08-07T23:12:48.269288Z |  18.94765032 |          21.70026332 |
+| 2025-08-07T23:12:49.269290Z |  17.72959251 |          21.35618670 |
+| 2025-08-07T23:12:50.269291Z |  17.06740965 |          20.95323179 |
+| 2025-08-07T23:12:51.269292Z |  17.12322718 |          20.56464957 |
+| 2025-08-07T23:12:52.269294Z |  17.88337902 |          20.25179299 |
 
 
 :::

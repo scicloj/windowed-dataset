@@ -232,9 +232,9 @@ _unnamed [3 3]:
 
 |                     :timestamp | :temperature | :sensor-id |
 |--------------------------------|-------------:|------------|
-| 2025-08-07T23:08:10.233707922Z |         22.5 |   temp-001 |
-| 2025-08-07T23:08:40.233707922Z |         23.1 |   temp-001 |
-| 2025-08-07T23:09:10.233707922Z |         22.8 |   temp-001 |
+| 2025-08-07T23:12:41.529673292Z |         22.5 |   temp-001 |
+| 2025-08-07T23:13:11.529673292Z |         23.1 |   temp-001 |
+| 2025-08-07T23:13:41.529673292Z |         22.8 |   temp-001 |
 
 
 :::
@@ -324,11 +324,11 @@ _unnamed [5 3]:
 
 |                     :timestamp | :temperature | :reading-id |
 |--------------------------------|-------------:|------------:|
-| 2025-08-07T23:09:40.241186285Z |         23.2 |           3 |
-| 2025-08-07T23:10:10.241186285Z |         22.9 |           4 |
-| 2025-08-07T23:10:40.241186285Z |         23.1 |           5 |
-| 2025-08-07T23:11:10.241186285Z |         22.7 |           6 |
-| 2025-08-07T23:11:40.241186285Z |         22.4 |           7 |
+| 2025-08-07T23:14:11.536744168Z |         23.2 |           3 |
+| 2025-08-07T23:14:41.536744168Z |         22.9 |           4 |
+| 2025-08-07T23:15:11.536744168Z |         23.1 |           5 |
+| 2025-08-07T23:15:41.536744168Z |         22.7 |           6 |
+| 2025-08-07T23:16:11.536744168Z |         22.4 |           7 |
 
 
 :::
@@ -381,16 +381,16 @@ Binary search to find the first index where timestamp >= target-time.
 
 ::: {.printedClojure}
 ```clojure
-({:target-time "2025-08-07T23:09:40.244730050Z",
+({:target-time "2025-08-07T23:14:11.540257117Z",
   :description "Between timestamps",
   :found-position 2}
- {:target-time "2025-08-07T23:10:10.244730050Z",
+ {:target-time "2025-08-07T23:14:41.540257117Z",
   :description "Exact match",
   :found-position 2}
- {:target-time "2025-08-07T23:07:40.244730050Z",
+ {:target-time "2025-08-07T23:12:11.540257117Z",
   :description "Before all timestamps",
   :found-position 0}
- {:target-time "2025-08-07T23:13:10.244730050Z",
+ {:target-time "2025-08-07T23:17:41.540257117Z",
   :description "After all timestamps",
   :found-position 5})
 
@@ -455,8 +455,8 @@ Return a regular dataset as a view over the content of a windowed dataset,
 
 ```{=html}
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-2-minutes
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:13:10.258484803Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:13:40.258484803Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:14:10.258484803Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:14:40.258484803Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:15:10.258484803Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-minutes
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [11 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:10:10.258484803Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">4</td></tr><tr><td>2025-08-07T23:10:40.258484803Z</td><td style="text-align:right;">22.7</td><td style="text-align:right;">5</td></tr><tr><td>2025-08-07T23:11:10.258484803Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">6</td></tr><tr><td>2025-08-07T23:11:40.258484803Z</td><td style="text-align:right;">22.4</td><td style="text-align:right;">7</td></tr><tr><td>2025-08-07T23:12:10.258484803Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">8</td></tr><tr><td>2025-08-07T23:12:40.258484803Z</td><td style="text-align:right;">21.8</td><td style="text-align:right;">9</td></tr><tr><td>2025-08-07T23:13:10.258484803Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:13:40.258484803Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:14:10.258484803Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:14:40.258484803Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:15:10.258484803Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:all-data
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:17:41.553196038Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:18:11.553196038Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:18:41.553196038Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:19:11.553196038Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:19:41.553196038Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-minutes
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [11 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:14:41.553196038Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">4</td></tr><tr><td>2025-08-07T23:15:11.553196038Z</td><td style="text-align:right;">22.7</td><td style="text-align:right;">5</td></tr><tr><td>2025-08-07T23:15:41.553196038Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">6</td></tr><tr><td>2025-08-07T23:16:11.553196038Z</td><td style="text-align:right;">22.4</td><td style="text-align:right;">7</td></tr><tr><td>2025-08-07T23:16:41.553196038Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">8</td></tr><tr><td>2025-08-07T23:17:11.553196038Z</td><td style="text-align:right;">21.8</td><td style="text-align:right;">9</td></tr><tr><td>2025-08-07T23:17:41.553196038Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:18:11.553196038Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:18:41.553196038Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:19:11.553196038Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:19:41.553196038Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:all-data
 </code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [15 2]:</p><table class="table"><thead><tr><th style="text-align:right;">:reading-id</th><th style="text-align:right;">:temperature</th></tr></thead><tbody><tr><td style="text-align:right;">0</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">1</td><td style="text-align:right;">22.3</td></tr><tr><td style="text-align:right;">2</td><td style="text-align:right;">21.9</td></tr><tr><td style="text-align:right;">3</td><td style="text-align:right;">22.5</td></tr><tr><td style="text-align:right;">4</td><td style="text-align:right;">22.2</td></tr><tr><td style="text-align:right;">5</td><td style="text-align:right;">22.7</td></tr><tr><td style="text-align:right;">6</td><td style="text-align:right;">22.0</td></tr><tr><td style="text-align:right;">7</td><td style="text-align:right;">22.4</td></tr><tr><td style="text-align:right;">8</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">9</td><td style="text-align:right;">21.8</td></tr><tr><td style="text-align:right;">10</td><td style="text-align:right;">22.2</td></tr><tr><td style="text-align:right;">11</td><td style="text-align:right;">22.0</td></tr><tr><td style="text-align:right;">12</td><td style="text-align:right;">22.6</td></tr><tr><td style="text-align:right;">13</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">14</td><td style="text-align:right;">22.5</td></tr></tbody></table></div></div></td></tr></table></div><p>}</p></div>
 ```
 
@@ -582,10 +582,10 @@ _unnamed [4 3]:
 
 |                  :timestamp | :value | :moving-avg |
 |-----------------------------|-------:|------------:|
-| 2025-08-07T23:08:10.274375Z |   10.0 |             |
-| 2025-08-07T23:08:40.274378Z |   20.0 |        10.0 |
-| 2025-08-07T23:09:10.274391Z |   15.0 |        15.0 |
-| 2025-08-07T23:09:40.274394Z |   25.0 |        15.0 |
+| 2025-08-07T23:12:41.567686Z |   10.0 |             |
+| 2025-08-07T23:13:11.567688Z |   20.0 |        10.0 |
+| 2025-08-07T23:13:41.567701Z |   15.0 |        15.0 |
+| 2025-08-07T23:14:11.567704Z |   25.0 |        15.0 |
 
 
 :::
