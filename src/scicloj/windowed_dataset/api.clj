@@ -18,6 +18,7 @@
   and given `column-types` (map).
 
   **Args:**
+  
   - `column-types` - a map from column name to type
   - `max-size` - maximal window size to keep
 
@@ -37,6 +38,7 @@
   "Create a deep copy of a windowed dataset.
   
   **Args:**
+  
   - `windowed-dataset` - a `WindowedDataset`
   
   **Returns:**
@@ -67,6 +69,7 @@
   "Insert a new row to a `WindowedDataset`.
   
   **Args:**
+  
   - `windowed-dataset` - a `WindowedDataset`
   - `row` - A row represented as a map structure
   (can be a record or `FastStruct`, etc.)
@@ -99,6 +102,7 @@
   from the underlying dataset to present data in the correct chronological order.
   
   **Args:**
+  
   - `windowed-dataset` - a `WindowedDataset`
   
   **Returns:**
@@ -119,6 +123,7 @@
   "Return a regular dataset as a view over the content of a windowed dataset.
 
   **Args:**
+  
   - `windowed-dataset` - a `WindowedDataset`"
   [{:as windowed-dataset
     :keys [dataset]}]
@@ -132,6 +137,7 @@
   "Binary search to find the first index where timestamp >= target-time.
   
   **Args:**
+  
   - `timestamp-col` - the timestamp column from the dataset
   - `indices` - vector of indices in chronological order
   - `target-time` - the target timestamp to search for
@@ -155,6 +161,7 @@
   including only a recent time window. Uses binary search for optimal performance.
 
   **Args:**
+  
   - `windowed-dataset` - a `WindowedDataset`
   - `timestamp-colname` - the name of the column that contains timestamps
   - `time-window` - window length in ms (from most recent timestamp backwards)
@@ -214,6 +221,7 @@
   as if the data were being processed in real-time.
   
   **Args:**
+  
   - `time-series` - a tablecloth dataset with timestamp-ordered data
   - `options` - map with keys:
     - `:colname` - name of the new column to add
@@ -259,6 +267,7 @@
   
   **Args:**
   
+  
   - `windowed-dataset` - a `WindowedDataset`
   - `window-size` - number of recent samples to average
   - `value-colname` - column name containing values to be processed
@@ -278,6 +287,7 @@
   "Apply median filter to the most recent data in a windowed dataset.
   
   **Args:**
+  
   
   - `windowed-dataset` - a `WindowedDataset` 
   - `window-size` - number of recent samples to use for median calculation
@@ -300,6 +310,7 @@
   "Apply cascaded median filters (3-point then 5-point) for robust smoothing.
   
   **Args:**
+  
   
   - `windowed-dataset` - a `WindowedDataset`
   - `value-colname` - column name containing values to be processed
@@ -333,6 +344,7 @@
   
   **Args:**
   
+  
   - `windowed-dataset` - a `WindowedDataset`
   - `alpha` - smoothing factor (0 < alpha <= 1, higher = more responsive)
   - `value-colname` - column name containing values to be processed
@@ -358,6 +370,7 @@
   noise-reduction benefits of moving averages for comprehensive cleaning.
   
   **Args:**
+  
   
   - `windowed-dataset` - a `WindowedDataset`
   - `median-window` - window size for median filter
