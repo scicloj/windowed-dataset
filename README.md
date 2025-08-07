@@ -10,12 +10,13 @@ The Windowed Dataset library provides a circular buffer-based dataset implementa
 
 ## Key Features
 
-- **Constant Memory Usage**: Fixed-size circular buffer regardless of input stream size
-- **Efficient Time Windows**: O(log n) binary search for time-based data filtering  
-- **Streaming-Friendly**: Designed for real-time data processing workflows
-- **Tablecloth Integration**: Seamless conversion to/from regular datasets
-- **High Performance**: Built on tech.v3.datatype for efficient numeric operations
-- **Type-Aware**: Support for different column data types (numeric, temporal, string)
+- **Caution: Mutable** - Use with care
+- **Constant Memory Usage** - Fixed-size circular buffer regardless of input stream size
+- **Efficient Time Windows** - O(log n) binary search for time-based data filtering  
+- **Streaming-Friendly** - Designed for real-time data processing workflows
+- **Tablecloth Integration** - Seamless conversion to/from regular datasets
+- **High Performance** - Built on tech.v3.datatype for efficient numeric operations
+- **Type-Aware** - Support for different column data types (numeric, temporal, string)
 
 ## Installation
 
@@ -87,10 +88,10 @@ Or include the source directly in your project.
 
 ## Performance Characteristics
 
-- **Memory**: O(window-size) regardless of total data processed
-- **Insertion**: O(1) amortized time complexity
-- **Time Window Queries**: O(log n) using binary search
-- **Conversion to Dataset**: O(window-size)
+- **Memory** - O(window-size) regardless of total data processed
+- **Insertion** - O(1) amortized time complexity
+- **Time Window Queries** - O(log n) using binary search
+- **Conversion to Dataset** - zero copy (a dataset is a view)
 
 ## Dependencies
 
