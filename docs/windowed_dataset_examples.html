@@ -144,7 +144,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Status</span></a>
+  <a href="./index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">Docs</span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -167,15 +167,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#basic-usage" id="toc-basic-usage" class="nav-link active" data-scroll-target="#basic-usage">Basic Usage</a></li>
-  <li><a href="#inserting-data" id="toc-inserting-data" class="nav-link" data-scroll-target="#inserting-data">Inserting Data</a></li>
-  <li><a href="#time-window-functionality" id="toc-time-window-functionality" class="nav-link" data-scroll-target="#time-window-functionality">Time Window Functionality</a></li>
-  <li><a href="#real-time-streaming-simulation" id="toc-real-time-streaming-simulation" class="nav-link" data-scroll-target="#real-time-streaming-simulation">Real-time Streaming Simulation</a></li>
-  <li><a href="#advanced-example-progressive-column-addition" id="toc-advanced-example-progressive-column-addition" class="nav-link" data-scroll-target="#advanced-example-progressive-column-addition">Advanced Example: Progressive Column Addition</a></li>
-  <li><a href="#performance-characteristics" id="toc-performance-characteristics" class="nav-link" data-scroll-target="#performance-characteristics">Performance Characteristics</a></li>
+  <li><a href="#the-problem-streaming-data-with-limited-memory" id="toc-the-problem-streaming-data-with-limited-memory" class="nav-link active" data-scroll-target="#the-problem-streaming-data-with-limited-memory">The Problem: Streaming Data with Limited Memory</a></li>
+  <li><a href="#basic-setup" id="toc-basic-setup" class="nav-link" data-scroll-target="#basic-setup">Basic Setup</a></li>
+  <li><a href="#simulating-streaming-data" id="toc-simulating-streaming-data" class="nav-link" data-scroll-target="#simulating-streaming-data">Simulating Streaming Data</a></li>
+  <li><a href="#watching-the-window-in-action" id="toc-watching-the-window-in-action" class="nav-link" data-scroll-target="#watching-the-window-in-action">Watching the Window in Action</a></li>
+  <li><a href="#time-based-windows" id="toc-time-based-windows" class="nav-link" data-scroll-target="#time-based-windows">Time-Based Windows</a></li>
+  <li><a href="#real-world-pattern-streaming-analytics" id="toc-real-world-pattern-streaming-analytics" class="nav-link" data-scroll-target="#real-world-pattern-streaming-analytics">Real-World Pattern: Streaming Analytics</a></li>
+  <li><a href="#historical-analysis-adding-progressive-features" id="toc-historical-analysis-adding-progressive-features" class="nav-link" data-scroll-target="#historical-analysis-adding-progressive-features">Historical Analysis: Adding Progressive Features</a></li>
+  <li><a href="#memory-efficiency-demo" id="toc-memory-efficiency-demo" class="nav-link" data-scroll-target="#memory-efficiency-demo">Memory Efficiency Demo</a></li>
+  <li><a href="#practical-applications" id="toc-practical-applications" class="nav-link" data-scroll-target="#practical-applications">Practical Applications</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
-  <li><a href="#key-benefits-of-windowed-datasets" id="toc-key-benefits-of-windowed-datasets" class="nav-link" data-scroll-target="#key-benefits-of-windowed-datasets">Key Benefits of Windowed Datasets</a></li>
-  <li><a href="#common-use-cases" id="toc-common-use-cases" class="nav-link" data-scroll-target="#common-use-cases">Common Use Cases</a></li>
   </ul>
 </nav>
     </div>
@@ -215,35 +216,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="windowed_dataset_examples_files/md-default1.js" type="text/javascript"></script>
 <div class="sourceClojure">
 <div class="sourceCode" id="cb1"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">ns</span> windowed-dataset-examples</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Examples and demonstrations of windowed dataset functionality.</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="st">  </span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="st">  This notebook showcases the core capabilities of the windowed-dataset library</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="st">  for streaming data analysis and time-series processing."</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [scicloj.windowed-dataset.api <span class="at">:as</span> wd]</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            [tablecloth.api <span class="at">:as</span> tc]</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            [tablecloth.column.api <span class="at">:as</span> tcc]</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>            [java-time.api <span class="at">:as</span> java-time]</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>            [scicloj.kindly.v4.kind <span class="at">:as</span> kind]</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>            [tech.v3.datatype.functional <span class="at">:as</span> dfn]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Examples demonstrating windowed dataset functionality for streaming data analysis."</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  (<span class="at">:require</span> [scicloj.windowed-dataset.api <span class="at">:as</span> wd]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>            [tablecloth.api <span class="at">:as</span> tc]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>            [tablecloth.column.api <span class="at">:as</span> tcc]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>            [java-time.api <span class="at">:as</span> java-time]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>            [scicloj.kindly.v4.kind <span class="at">:as</span> kind]</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>            [tech.v3.datatype.functional <span class="at">:as</span> dfn]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>This notebook demonstrates the core functionality of windowed datasets for streaming data analysis and time-series processing.</p>
-<section id="basic-usage" class="level2">
-<h2 class="anchored" data-anchor-id="basic-usage">Basic Usage</h2>
-<p>Create a simple windowed dataset with timestamp and value columns</p>
+<p>This notebook shows how to use windowed datasets for streaming data analysis. We’ll work with temperature sensor data as a relatable example, but the same patterns apply to any time-series data.</p>
+<section id="the-problem-streaming-data-with-limited-memory" class="level2">
+<h2 class="anchored" data-anchor-id="the-problem-streaming-data-with-limited-memory">The Problem: Streaming Data with Limited Memory</h2>
+<p>Imagine you’re processing temperature readings from sensors. New readings arrive continuously, but you only care about recent trends and don’t want to store years of historical data in memory.</p>
+<p>Windowed datasets solve this by maintaining a “sliding window” of recent data.</p>
+</section>
+<section id="basic-setup" class="level2">
+<h2 class="anchored" data-anchor-id="basic-setup">Basic Setup</h2>
+<p>Let’s define our data structure: timestamp, temperature, and sensor location</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> sample-column-types</span></span>
+<div class="sourceCode" id="cb2"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> column-types</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:timestamp</span> <span class="at">:instant</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:value</span> <span class="at">:float64</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:sensor-id</span> <span class="at">:string</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:temperature</span> <span class="at">:float64</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:location</span> <span class="at">:string</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Create a windowed dataset with maximum size of 5 records</p>
+<p>Create a windowed dataset that keeps only the last 5 readings</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> windowed-ds</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (wd/make-windowed-dataset sample-column-types <span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> temperature-buffer</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  (wd/make-windowed-dataset column-types <span class="dv">5</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Initial windowed dataset:</strong></p>
+<p><strong>Initial state - empty buffer:</strong></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>windowed-ds</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>temperature-buffer</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;">
 <table class="caption-top table" data-quarto-postprocess="true">
@@ -263,8 +266,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th">:timestamp</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:value</th>
-<th data-quarto-table-cell-role="th">:sensor-id</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">:temperature</th>
+<th data-quarto-table-cell-role="th">:location</th>
 </tr>
 </thead>
 <tbody>
@@ -300,23 +303,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div><pre><code class="sourceCode language-clojure printed-clojure">:column-types {:timestamp :instant, :value :float64, :sensor-id :string}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:max-size 5</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-size 0</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-position 0</code></pre></div></div><p>}</p></div>
+<div><pre><code class="sourceCode language-clojure printed-clojure">:column-types {:timestamp :instant, :temperature :float64, :location :string}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:max-size 5</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-size 0</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-position 0</code></pre></div></div><p>}</p></div>
 </section>
-<section id="inserting-data" class="level2">
-<h2 class="anchored" data-anchor-id="inserting-data">Inserting Data</h2>
-<p>Let’s create some sample time-series data</p>
+<section id="simulating-streaming-data" class="level2">
+<h2 class="anchored" data-anchor-id="simulating-streaming-data">Simulating Streaming Data</h2>
+<p>Create sample temperature readings (like data from a greenhouse monitoring system)</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> sample-data</span></span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> sample-readings</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [start-time (java-time/instant)]</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">map</span> (<span class="kw">fn</span> [i]</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>           {<span class="at">:timestamp</span> (java-time/plus start-time (java-time/seconds i))</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:value</span> (<span class="kw">+</span> <span class="fl">10.0</span> (<span class="kw">*</span> <span class="fl">2.0</span> (Math/sin (<span class="kw">/</span> i <span class="fl">2.0</span>))))</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">:sensor-id</span> <span class="st">"sensor-1"</span>})</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>           {<span class="at">:timestamp</span> (java-time/plus start-time (java-time/seconds (<span class="kw">*</span> i <span class="dv">30</span>)))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">:temperature</span> (<span class="kw">+</span> <span class="fl">22.0</span> (<span class="kw">*</span> <span class="fl">2.0</span> (Math/sin (<span class="kw">/</span> i <span class="fl">3.0</span>)))) <span class="co">; Simulated daily variation</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">:location</span> <span class="st">"greenhouse-a"</span>})</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>         (<span class="kw">range</span> <span class="dv">10</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Sample time-series data (first 5 rows):</strong></p>
+<p><strong>Sample data - first 5 readings:</strong></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (<span class="kw">take</span> <span class="dv">5</span> sample-data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (<span class="kw">take</span> <span class="dv">5</span> sample-readings))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-dataset">
 <p>_unnamed [5 3]:</p>
@@ -324,112 +327,214 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th>:timestamp</th>
-<th style="text-align: right;">:value</th>
-<th>:sensor-id</th>
+<th style="text-align: right;">:temperature</th>
+<th>:location</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2025-08-07T22:50:54.238091Z</td>
-<td style="text-align: right;">10.00000000</td>
-<td>sensor-1</td>
+<td>2025-08-07T22:59:14.995218Z</td>
+<td style="text-align: right;">22.00000000</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:50:55.238091Z</td>
-<td style="text-align: right;">10.95885108</td>
-<td>sensor-1</td>
+<td>2025-08-07T22:59:44.995218Z</td>
+<td style="text-align: right;">22.65438939</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:50:56.238091Z</td>
-<td style="text-align: right;">11.68294197</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:00:14.995218Z</td>
+<td style="text-align: right;">23.23673961</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:50:57.238091Z</td>
-<td style="text-align: right;">11.99498997</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:00:44.995218Z</td>
+<td style="text-align: right;">23.68294197</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:50:58.238091Z</td>
-<td style="text-align: right;">11.81859485</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:01:14.995218Z</td>
+<td style="text-align: right;">23.94387580</td>
+<td>greenhouse-a</td>
 </tr>
 </tbody>
 </table>
-</div>
-<p>Insert data progressively and observe the windowed dataset behavior</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> demonstrate-progressive-insertion </span>[]</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">reduce</span> (<span class="kw">fn</span> [acc-ds row]</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">let</span> [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>                  regular-ds (wd/windowed-dataset-&gt;dataset updated-ds)]</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">println</span> (<span class="kw">str</span> <span class="st">"After inserting row with value "</span> (<span class="at">:value</span> row) <span class="st">":"</span>))</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">println</span> (<span class="kw">str</span> <span class="st">"  Window size: "</span> (<span class="at">:current-size</span> updated-ds)))</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">println</span> (<span class="kw">str</span> <span class="st">"  Current position: "</span> (<span class="at">:current-position</span> updated-ds)))</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">println</span> (<span class="kw">str</span> <span class="st">"  Data in window: "</span> (<span class="kw">vec</span> (<span class="at">:value</span> regular-ds))))</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">println</span>)</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>              updated-ds))</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>          windowed-ds</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>          (<span class="kw">take</span> <span class="dv">8</span> sample-data)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p><strong>Progressive insertion demonstration:</strong></p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(kind/code</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> (<span class="kw">with-out-str</span> (demonstrate-progressive-insertion)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">10.0</span>:</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">1</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">1</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.0</span>]</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">10.958851077208406</span>:</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">2</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">2</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.0</span> <span class="fl">10.958851077208406</span>]</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">11.682941969615793</span>:</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">3</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">3</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.0</span> <span class="fl">10.958851077208406</span> <span class="fl">11.682941969615793</span>]</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">11.994989973208108</span>:</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">4</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">4</span></span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.0</span> <span class="fl">10.958851077208406</span> <span class="fl">11.682941969615793</span> <span class="fl">11.994989973208108</span>]</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">11.818594853651364</span>:</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">5</span></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">0</span></span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.0</span> <span class="fl">10.958851077208406</span> <span class="fl">11.682941969615793</span> <span class="fl">11.994989973208108</span> <span class="fl">11.818594853651364</span>]</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">11.196944288207913</span>:</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">5</span></span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">1</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">10.958851077208406</span> <span class="fl">11.682941969615793</span> <span class="fl">11.994989973208108</span> <span class="fl">11.818594853651364</span> <span class="fl">11.196944288207913</span>]</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">10.282240016119735</span>:</span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">5</span></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">2</span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">11.682941969615793</span> <span class="fl">11.994989973208108</span> <span class="fl">11.818594853651364</span> <span class="fl">11.196944288207913</span> <span class="fl">10.282240016119735</span>]</span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>After inserting row with value <span class="fl">9.29843354462076</span>:</span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>  Window size: <span class="dv">5</span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>  Current position: <span class="dv">3</span></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  Data in window: [<span class="fl">11.994989973208108</span> <span class="fl">11.818594853651364</span> <span class="fl">11.196944288207913</span> <span class="fl">10.282240016119735</span> <span class="fl">9.29843354462076</span>]</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="time-window-functionality" class="level2">
-<h2 class="anchored" data-anchor-id="time-window-functionality">Time Window Functionality</h2>
-<p>Create a windowed dataset with more data for time window examples</p>
+<section id="watching-the-window-in-action" class="level2">
+<h2 class="anchored" data-anchor-id="watching-the-window-in-action">Watching the Window in Action</h2>
+<p>Let’s insert data one by one and watch how the window behaves</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> full-windowed-ds</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! windowed-ds sample-data))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> show-window-evolution </span>[]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [results (<span class="kw">atom</span> [])]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">reduce</span> (<span class="kw">fn</span> [buffer reading]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">let</span> [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>                    current-data (wd/windowed-dataset-&gt;dataset updated-buffer)]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">swap!</span> results <span class="kw">conj</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                       {<span class="at">:reading-number</span> (<span class="kw">count</span> <span class="at">@results</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:buffer-size</span> (<span class="at">:current-size</span> updated-buffer)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:temperatures</span> (<span class="kw">vec</span> (<span class="at">:temperature</span> current-data))})</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                updated-buffer))</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>            temperature-buffer</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>            (<span class="kw">take</span> <span class="dv">8</span> sample-readings))</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">@results</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Full windowed dataset converted to regular dataset:</strong></p>
+<p><strong>Window evolution as data arrives:</strong></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(wd/windowed-dataset-&gt;dataset full-windowed-ds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (show-window-evolution))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>_unnamed [8 3]:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 14%">
+<col style="width: 67%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">:reading-number</th>
+<th style="text-align: right;">:buffer-size</th>
+<th>:temperatures</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td>[22.0]</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td>[22.0 22.654389393592304]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">3</td>
+<td>[22.0 22.654389393592304 23.236739606139473]</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4</td>
+<td>[22.0 22.654389393592304 23.236739606139473 23.682941969615793]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">5</td>
+<td>[22.0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>22.654389393592304</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.236739606139473</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.682941969615793</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.943875802726627]</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">5</td>
+<td>[22.654389393592304</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.236739606139473</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.682941969615793</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.943875802726627</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.99081591550353]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">5</td>
+<td>[23.236739606139473</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.682941969615793</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.943875802726627</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.99081591550353</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.818594853651362]</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">5</td>
+<td>[23.682941969615793</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.943875802726627</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.99081591550353</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.818594853651362</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td>23.44617176347665]</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Notice how: - The buffer grows until it reaches maximum size (5) - After that, old data is automatically discarded to make room for new data - Memory usage stays constant regardless of how much data we process</p>
+</section>
+<section id="time-based-windows" class="level2">
+<h2 class="anchored" data-anchor-id="time-based-windows">Time-Based Windows</h2>
+<p>Often you don’t just want the last N readings - you want “all data from the last X minutes”</p>
+<p>Fill our buffer with all sample data</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb10"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> full-buffer</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! temperature-buffer sample-readings))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>All data in buffer:</strong></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb11"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>(wd/windowed-dataset-&gt;dataset full-buffer)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-dataset">
 <p>_unnamed [5 3]:</p>
@@ -437,47 +542,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th>:timestamp</th>
-<th style="text-align: right;">:value</th>
-<th>:sensor-id</th>
+<th style="text-align: right;">:temperature</th>
+<th>:location</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2025-08-07T22:50:59.238091095Z</td>
-<td style="text-align: right;">11.19694429</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:01:44.995218155Z</td>
+<td style="text-align: right;">23.99081592</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:00.238091095Z</td>
-<td style="text-align: right;">10.28224002</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:14.995218155Z</td>
+<td style="text-align: right;">23.81859485</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:01.238091095Z</td>
-<td style="text-align: right;">9.29843354</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:44.995218155Z</td>
+<td style="text-align: right;">23.44617176</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:02.238091095Z</td>
-<td style="text-align: right;">8.48639501</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:14.995218155Z</td>
+<td style="text-align: right;">22.91454525</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:03.238091095Z</td>
-<td style="text-align: right;">8.04493976</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:44.995218155Z</td>
+<td style="text-align: right;">22.28224002</td>
+<td>greenhouse-a</td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>Demonstrate time window extraction</p>
+<p>Extract different time windows</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb13"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [regular-ds (wd/windowed-dataset-&gt;dataset full-windowed-ds)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>      latest-time (<span class="kw">last</span> (<span class="at">:timestamp</span> regular-ds))]</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">;; **Time window examples:**</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:last-3-seconds</span> (wd/windowed-dataset-&gt;time-window-dataset full-windowed-ds <span class="at">:timestamp</span> <span class="dv">3000</span>)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>   <span class="at">:last-5-seconds</span> (wd/windowed-dataset-&gt;time-window-dataset full-windowed-ds <span class="at">:timestamp</span> <span class="dv">5000</span>)</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>   <span class="at">:latest-timestamp</span> latest-time})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">let</span> [now (<span class="at">:timestamp</span> (<span class="kw">last</span> sample-readings))]</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  {<span class="at">:last-90-seconds</span> (wd/windowed-dataset-&gt;time-window-dataset full-buffer <span class="at">:timestamp</span> <span class="dv">90000</span>)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">:last-150-seconds</span> (wd/windowed-dataset-&gt;time-window-dataset full-buffer <span class="at">:timestamp</span> <span class="dv">150000</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">:reference-time</span> now})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;">
 <table class="caption-top table" data-quarto-postprocess="true">
@@ -488,7 +591,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-valign="top"><div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:last-3-seconds</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:last-90-seconds</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
 </div></td>
 <td><div style="margin-left:10px;">
 <div class="clay-dataset">
@@ -497,30 +600,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th">:timestamp</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:value</th>
-<th data-quarto-table-cell-role="th">:sensor-id</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">:temperature</th>
+<th data-quarto-table-cell-role="th">:location</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2025-08-07T22:51:00.238091095Z</td>
-<td style="text-align: right;">10.28224002</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:14.995218155Z</td>
+<td style="text-align: right;">23.81859485</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:01.238091095Z</td>
-<td style="text-align: right;">9.29843354</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:44.995218155Z</td>
+<td style="text-align: right;">23.44617176</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:02.238091095Z</td>
-<td style="text-align: right;">8.48639501</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:14.995218155Z</td>
+<td style="text-align: right;">22.91454525</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:03.238091095Z</td>
-<td style="text-align: right;">8.04493976</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:44.995218155Z</td>
+<td style="text-align: right;">22.28224002</td>
+<td>greenhouse-a</td>
 </tr>
 </tbody>
 </table>
@@ -537,7 +640,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td data-valign="top"><div>
-<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:last-5-seconds</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
+<pre class="sourceCode language-clojure printed-clojure code-with-copy"><code>:last-150-seconds</code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre>
 </div></td>
 <td><div style="margin-left:10px;">
 <div class="clay-dataset">
@@ -546,35 +649,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <thead>
 <tr class="header">
 <th data-quarto-table-cell-role="th">:timestamp</th>
-<th style="text-align: right;" data-quarto-table-cell-role="th">:value</th>
-<th data-quarto-table-cell-role="th">:sensor-id</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">:temperature</th>
+<th data-quarto-table-cell-role="th">:location</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2025-08-07T22:50:59.238091095Z</td>
-<td style="text-align: right;">11.19694429</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:01:44.995218155Z</td>
+<td style="text-align: right;">23.99081592</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:00.238091095Z</td>
-<td style="text-align: right;">10.28224002</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:14.995218155Z</td>
+<td style="text-align: right;">23.81859485</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:01.238091095Z</td>
-<td style="text-align: right;">9.29843354</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:02:44.995218155Z</td>
+<td style="text-align: right;">23.44617176</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:02.238091095Z</td>
-<td style="text-align: right;">8.48639501</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:14.995218155Z</td>
+<td style="text-align: right;">22.91454525</td>
+<td>greenhouse-a</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:03.238091095Z</td>
-<td style="text-align: right;">8.04493976</td>
-<td>sensor-1</td>
+<td>2025-08-07T23:03:44.995218155Z</td>
+<td style="text-align: right;">22.28224002</td>
+<td>greenhouse-a</td>
 </tr>
 </tbody>
 </table>
@@ -583,328 +686,348 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<div><pre><code class="sourceCode language-clojure printed-clojure">:latest-timestamp #inst "2025-08-07T22:51:03.238091095-00:00"</code></pre></div></div><p>}</p></div>
+<div><pre><code class="sourceCode language-clojure printed-clojure">:reference-time #inst "2025-08-07T23:03:44.995218155-00:00"</code></pre></div></div><p>}</p></div>
 </section>
-<section id="real-time-streaming-simulation" class="level2">
-<h2 class="anchored" data-anchor-id="real-time-streaming-simulation">Real-time Streaming Simulation</h2>
-<p>Demonstrate how windowed datasets can be used for streaming analysis</p>
+<section id="real-world-pattern-streaming-analytics" class="level2">
+<h2 class="anchored" data-anchor-id="real-world-pattern-streaming-analytics">Real-World Pattern: Streaming Analytics</h2>
+<p>Here’s how you might calculate a running average temperature in a real application</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> calculate-moving-average </span>[windowed-ds]</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Calculate moving average from a windowed dataset"</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [regular-ds (wd/windowed-dataset-&gt;dataset windowed-ds)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        values (<span class="at">:value</span> regular-ds)]</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">when</span> (<span class="kw">seq</span> values)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>      (dfn/mean values))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> calculate-average-temperature </span>[buffer]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Calculate current average temperature from buffer"</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [current-data (wd/windowed-dataset-&gt;dataset buffer)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        temperatures (<span class="at">:temperature</span> current-data)]</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">when</span> (<span class="kw">seq</span> temperatures)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>      (dfn/mean temperatures))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Simulate streaming analysis with moving averages</p>
+<p>Simulate processing readings as they arrive, calculating moving averages</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> streaming-analysis-demo </span>[]</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [results (<span class="kw">atom</span> [])]</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">reduce</span> (<span class="kw">fn</span> [acc-ds row]</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">let</span> [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                    moving-avg (calculate-moving-average updated-ds)]</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">swap!</span> results <span class="kw">conj</span> {<span class="at">:timestamp</span> (<span class="at">:timestamp</span> row)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:value</span> (<span class="at">:value</span> row)</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>                                     <span class="at">:moving-average</span> moving-avg})</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>                updated-ds))</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>            windowed-ds</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            sample-data)</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">@results</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> streaming-analytics-demo </span>[]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [results (<span class="kw">atom</span> [])]</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">reduce</span> (<span class="kw">fn</span> [buffer reading]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>              (<span class="kw">let</span> [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>                    avg-temp (calculate-average-temperature updated-buffer)]</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">swap!</span> results <span class="kw">conj</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                       {<span class="at">:timestamp</span> (<span class="at">:timestamp</span> reading)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:current-temperature</span> (<span class="at">:temperature</span> reading)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:running-average</span> avg-temp</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>                        <span class="at">:readings-in-buffer</span> (<span class="at">:current-size</span> updated-buffer)})</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>                updated-buffer))</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>            temperature-buffer</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>            sample-readings)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">@results</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Streaming analysis with moving averages:</strong></p>
+<p><strong>Streaming analytics results:</strong></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (streaming-analysis-demo))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="clay-dataset">
-<p>_unnamed [10 3]:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>:timestamp</th>
-<th style="text-align: right;">:value</th>
-<th style="text-align: right;">:moving-average</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>2025-08-07T22:50:54.238091Z</td>
-<td style="text-align: right;">10.00000000</td>
-<td style="text-align: right;">10.00000000</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:55.238091Z</td>
-<td style="text-align: right;">10.95885108</td>
-<td style="text-align: right;">10.47942554</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:50:56.238091Z</td>
-<td style="text-align: right;">11.68294197</td>
-<td style="text-align: right;">10.88059768</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:57.238091Z</td>
-<td style="text-align: right;">11.99498997</td>
-<td style="text-align: right;">11.15919576</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:50:58.238091Z</td>
-<td style="text-align: right;">11.81859485</td>
-<td style="text-align: right;">11.29107557</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:59.238091Z</td>
-<td style="text-align: right;">11.19694429</td>
-<td style="text-align: right;">11.53046443</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:51:00.238091Z</td>
-<td style="text-align: right;">10.28224002</td>
-<td style="text-align: right;">11.39514222</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:51:01.238091Z</td>
-<td style="text-align: right;">9.29843354</td>
-<td style="text-align: right;">10.91824054</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:51:02.238091Z</td>
-<td style="text-align: right;">8.48639501</td>
-<td style="text-align: right;">10.21652154</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:51:03.238091Z</td>
-<td style="text-align: right;">8.04493976</td>
-<td style="text-align: right;">9.46179052</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section id="advanced-example-progressive-column-addition" class="level2">
-<h2 class="anchored" data-anchor-id="advanced-example-progressive-column-addition">Advanced Example: Progressive Column Addition</h2>
-<p>Demonstrate add-column-by-windowed-fn for batch processing</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> time-series-data</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  (tc/dataset {<span class="at">:timestamp</span> (<span class="kw">map</span> #(java-time/plus (java-time/instant) (java-time/seconds <span class="va">%</span>)) (<span class="kw">range</span> <span class="dv">10</span>))</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">:value</span> (<span class="kw">map</span> #(<span class="kw">+</span> <span class="fl">5.0</span> (<span class="kw">*</span> <span class="fl">3.0</span> (Math/sin (<span class="kw">/</span> <span class="va">%</span> <span class="fl">1.5</span>)))) (<span class="kw">range</span> <span class="dv">10</span>))</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>               <span class="at">:noise</span> (<span class="kw">repeatedly</span> <span class="dv">10</span> #(<span class="kw">*</span> <span class="fl">0.5</span> (<span class="kw">-</span> (<span class="kw">rand</span>) <span class="fl">0.5</span>)))}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p><strong>Original time series:</strong></p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>time-series-data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="clay-dataset">
-<p>_unnamed [10 3]:</p>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>:timestamp</th>
-<th style="text-align: right;">:value</th>
-<th style="text-align: right;">:noise</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>2025-08-07T22:50:54.271095Z</td>
-<td style="text-align: right;">5.00000000</td>
-<td style="text-align: right;">0.17921910</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:55.271149Z</td>
-<td style="text-align: right;">6.85510941</td>
-<td style="text-align: right;">0.11550950</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:50:56.271154Z</td>
-<td style="text-align: right;">7.91581370</td>
-<td style="text-align: right;">0.18040711</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:57.271156Z</td>
-<td style="text-align: right;">7.72789228</td>
-<td style="text-align: right;">-0.20914995</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:50:58.271158Z</td>
-<td style="text-align: right;">6.37181788</td>
-<td style="text-align: right;">-0.02834836</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:50:59.271160Z</td>
-<td style="text-align: right;">4.42829611</td>
-<td style="text-align: right;">0.08674079</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:51:00.271162Z</td>
-<td style="text-align: right;">2.72959251</td>
-<td style="text-align: right;">0.17570259</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:51:01.271164Z</td>
-<td style="text-align: right;">2.00313525</td>
-<td style="text-align: right;">0.11306764</td>
-</tr>
-<tr class="odd">
-<td>2025-08-07T22:51:02.271166Z</td>
-<td style="text-align: right;">2.56001183</td>
-<td style="text-align: right;">0.05813438</td>
-</tr>
-<tr class="even">
-<td>2025-08-07T22:51:03.271169Z</td>
-<td style="text-align: right;">4.16175351</td>
-<td style="text-align: right;">-0.14664493</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>Add progressive moving average column</p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> windowed-moving-avg-fn</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">fn</span> [windowed-ds]</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    (calculate-moving-average windowed-ds)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p><strong>Time series with progressive moving average:</strong></p>
-<div class="sourceClojure">
-<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(wd/add-column-by-windowed-fn</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a> time-series-data</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a> {<span class="at">:colname</span> <span class="at">:progressive-moving-avg</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">:windowed-fn</span> windowed-moving-avg-fn</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">:windowed-dataset-size</span> <span class="dv">120</span>})</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>(tc/dataset (streaming-analytics-demo))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="clay-dataset">
 <p>_unnamed [10 4]:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 36%">
-<col style="width: 15%">
-<col style="width: 16%">
-<col style="width: 31%">
+<col style="width: 32%">
+<col style="width: 24%">
+<col style="width: 20%">
+<col style="width: 23%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>:timestamp</th>
-<th style="text-align: right;">:value</th>
-<th style="text-align: right;">:noise</th>
-<th style="text-align: right;">:progressive-moving-avg</th>
+<th style="text-align: right;">:current-temperature</th>
+<th style="text-align: right;">:running-average</th>
+<th style="text-align: right;">:readings-in-buffer</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2025-08-07T22:50:54.271095Z</td>
-<td style="text-align: right;">5.00000000</td>
-<td style="text-align: right;">0.17921910</td>
-<td style="text-align: right;"></td>
+<td>2025-08-07T22:59:14.995218Z</td>
+<td style="text-align: right;">22.00000000</td>
+<td style="text-align: right;">22.00000000</td>
+<td style="text-align: right;">1</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:50:55.271149Z</td>
-<td style="text-align: right;">6.85510941</td>
-<td style="text-align: right;">0.11550950</td>
-<td style="text-align: right;">5.00000000</td>
+<td>2025-08-07T22:59:44.995218Z</td>
+<td style="text-align: right;">22.65438939</td>
+<td style="text-align: right;">22.32719470</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:50:56.271154Z</td>
-<td style="text-align: right;">7.91581370</td>
-<td style="text-align: right;">0.18040711</td>
-<td style="text-align: right;">5.92755470</td>
+<td>2025-08-07T23:00:14.995218Z</td>
+<td style="text-align: right;">23.23673961</td>
+<td style="text-align: right;">22.63037633</td>
+<td style="text-align: right;">3</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:50:57.271156Z</td>
-<td style="text-align: right;">7.72789228</td>
-<td style="text-align: right;">-0.20914995</td>
-<td style="text-align: right;">6.59030770</td>
+<td>2025-08-07T23:00:44.995218Z</td>
+<td style="text-align: right;">23.68294197</td>
+<td style="text-align: right;">22.89351774</td>
+<td style="text-align: right;">4</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:50:58.271158Z</td>
-<td style="text-align: right;">6.37181788</td>
-<td style="text-align: right;">-0.02834836</td>
-<td style="text-align: right;">6.87470385</td>
+<td>2025-08-07T23:01:14.995218Z</td>
+<td style="text-align: right;">23.94387580</td>
+<td style="text-align: right;">23.10358935</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:50:59.271160Z</td>
-<td style="text-align: right;">4.42829611</td>
-<td style="text-align: right;">0.08674079</td>
-<td style="text-align: right;">6.77412665</td>
+<td>2025-08-07T23:01:44.995218Z</td>
+<td style="text-align: right;">23.99081592</td>
+<td style="text-align: right;">23.50175254</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:00.271162Z</td>
-<td style="text-align: right;">2.72959251</td>
-<td style="text-align: right;">0.17570259</td>
-<td style="text-align: right;">6.38315490</td>
+<td>2025-08-07T23:02:14.995218Z</td>
+<td style="text-align: right;">23.81859485</td>
+<td style="text-align: right;">23.73459363</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:01.271164Z</td>
-<td style="text-align: right;">2.00313525</td>
-<td style="text-align: right;">0.11306764</td>
-<td style="text-align: right;">5.86121741</td>
+<td>2025-08-07T23:02:44.995218Z</td>
+<td style="text-align: right;">23.44617176</td>
+<td style="text-align: right;">23.77648006</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="odd">
-<td>2025-08-07T22:51:02.271166Z</td>
-<td style="text-align: right;">2.56001183</td>
-<td style="text-align: right;">0.05813438</td>
-<td style="text-align: right;">5.37895714</td>
+<td>2025-08-07T23:03:14.995218Z</td>
+<td style="text-align: right;">22.91454525</td>
+<td style="text-align: right;">23.62280072</td>
+<td style="text-align: right;">5</td>
 </tr>
 <tr class="even">
-<td>2025-08-07T22:51:03.271169Z</td>
-<td style="text-align: right;">4.16175351</td>
-<td style="text-align: right;">-0.14664493</td>
-<td style="text-align: right;">5.06574100</td>
+<td>2025-08-07T23:03:44.995218Z</td>
+<td style="text-align: right;">22.28224002</td>
+<td style="text-align: right;">23.29047356</td>
+<td style="text-align: right;">5</td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="performance-characteristics" class="level2">
-<h2 class="anchored" data-anchor-id="performance-characteristics">Performance Characteristics</h2>
-<p>Demonstrate that windowed datasets maintain constant memory usage</p>
+<section id="historical-analysis-adding-progressive-features" class="level2">
+<h2 class="anchored" data-anchor-id="historical-analysis-adding-progressive-features">Historical Analysis: Adding Progressive Features</h2>
+<p>Sometimes you have historical data and want to see how metrics would have evolved over time, as if you were processing it in real-time.</p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> memory-usage-demo </span>[]</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [large-dataset (<span class="kw">map</span> (<span class="kw">fn</span> [i]</span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                             {<span class="at">:timestamp</span> (java-time/plus (java-time/instant) (java-time/millis i))</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:value</span> (<span class="kw">rand</span>)</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                              <span class="at">:sensor-id</span> <span class="st">"perf-test"</span>})</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>                           (<span class="kw">range</span> <span class="dv">1000</span>))</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        windowed-ds-small (wd/make-windowed-dataset sample-column-types <span class="dv">10</span>)</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        windowed-ds-large (wd/make-windowed-dataset sample-column-types <span class="dv">100</span>)]</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    {<span class="at">:small-window</span> {<span class="at">:max-size</span> <span class="dv">10</span></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:final-size</span> (<span class="at">:current-size</span> (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! windowed-ds-small large-dataset))}</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">:large-window</span> {<span class="at">:max-size</span> <span class="dv">100</span></span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>                    <span class="at">:final-size</span> (<span class="at">:current-size</span> (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! windowed-ds-large large-dataset))}</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>     <span class="at">:input-data-size</span> (<span class="kw">count</span> large-dataset)}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb18"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> historical-temperatures</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  (tc/dataset {<span class="at">:timestamp</span> (<span class="kw">map</span> #(java-time/plus (java-time/instant)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                                                (java-time/seconds <span class="va">%</span>))</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                               (<span class="kw">range</span> <span class="dv">12</span>))</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">:temperature</span> (<span class="kw">map</span> #(<span class="kw">+</span> <span class="fl">20.0</span> (<span class="kw">*</span> <span class="fl">3.0</span> (Math/sin (<span class="kw">/</span> <span class="va">%</span> <span class="fl">2.0</span>))))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                                 (<span class="kw">range</span> <span class="dv">12</span>))}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><strong>Memory usage demonstration:</strong></p>
+<p><strong>Original historical data:</strong></p>
 <div class="sourceClojure">
-<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>(memory-usage-demo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>historical-temperatures</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>_unnamed [12 2]:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>:timestamp</th>
+<th style="text-align: right;">:temperature</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2025-08-07T22:59:15.029262Z</td>
+<td style="text-align: right;">20.00000000</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:16.029312Z</td>
+<td style="text-align: right;">21.43827662</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:17.029317Z</td>
+<td style="text-align: right;">22.52441295</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:18.029319Z</td>
+<td style="text-align: right;">22.99248496</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:19.029321Z</td>
+<td style="text-align: right;">22.72789228</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:20.029323Z</td>
+<td style="text-align: right;">21.79541643</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:21.029325Z</td>
+<td style="text-align: right;">20.42336002</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:22.029327Z</td>
+<td style="text-align: right;">18.94765032</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:23.029328Z</td>
+<td style="text-align: right;">17.72959251</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:24.029330Z</td>
+<td style="text-align: right;">17.06740965</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:25.029332Z</td>
+<td style="text-align: right;">17.12322718</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:26.029335Z</td>
+<td style="text-align: right;">17.88337902</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Add a progressive moving average column</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb20"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">def</span><span class="fu"> with-moving-average</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  (wd/add-column-by-windowed-fn</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>   historical-temperatures</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>   {<span class="at">:colname</span> <span class="at">:progressive-average</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">:windowed-fn</span> calculate-average-temperature</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">:windowed-dataset-size</span> <span class="dv">120</span>}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Historical data with progressive moving averages:</strong></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb21"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>with-moving-average</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="clay-dataset">
+<p>_unnamed [12 3]:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>:timestamp</th>
+<th style="text-align: right;">:temperature</th>
+<th style="text-align: right;">:progressive-average</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2025-08-07T22:59:15.029262Z</td>
+<td style="text-align: right;">20.00000000</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:16.029312Z</td>
+<td style="text-align: right;">21.43827662</td>
+<td style="text-align: right;">20.00000000</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:17.029317Z</td>
+<td style="text-align: right;">22.52441295</td>
+<td style="text-align: right;">20.71913831</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:18.029319Z</td>
+<td style="text-align: right;">22.99248496</td>
+<td style="text-align: right;">21.32089652</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:19.029321Z</td>
+<td style="text-align: right;">22.72789228</td>
+<td style="text-align: right;">21.73879363</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:20.029323Z</td>
+<td style="text-align: right;">21.79541643</td>
+<td style="text-align: right;">21.93661336</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:21.029325Z</td>
+<td style="text-align: right;">20.42336002</td>
+<td style="text-align: right;">21.91308054</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:22.029327Z</td>
+<td style="text-align: right;">18.94765032</td>
+<td style="text-align: right;">21.70026332</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:23.029328Z</td>
+<td style="text-align: right;">17.72959251</td>
+<td style="text-align: right;">21.35618670</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:24.029330Z</td>
+<td style="text-align: right;">17.06740965</td>
+<td style="text-align: right;">20.95323179</td>
+</tr>
+<tr class="odd">
+<td>2025-08-07T22:59:25.029332Z</td>
+<td style="text-align: right;">17.12322718</td>
+<td style="text-align: right;">20.56464957</td>
+</tr>
+<tr class="even">
+<td>2025-08-07T22:59:26.029335Z</td>
+<td style="text-align: right;">17.88337902</td>
+<td style="text-align: right;">20.25179299</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Notice how the moving average starts as nil (no data), then becomes the first value, then a true average as more data accumulates.</p>
+</section>
+<section id="memory-efficiency-demo" class="level2">
+<h2 class="anchored" data-anchor-id="memory-efficiency-demo">Memory Efficiency Demo</h2>
+<p>Let’s prove that windowed datasets use constant memory regardless of input size</p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb22"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>(<span class="bu">defn</span><span class="fu"> memory-efficiency-test </span>[]</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  (<span class="kw">let</span> [<span class="co">;; Create lots of data</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>        lots-of-data (<span class="kw">map</span> (<span class="kw">fn</span> [i]</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                            {<span class="at">:timestamp</span> (java-time/plus (java-time/instant)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                                                        (java-time/millis i))</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:temperature</span> (<span class="kw">+</span> <span class="fl">20.0</span> (<span class="kw">rand</span> <span class="fl">10.0</span>))</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                             <span class="at">:location</span> <span class="st">"test-sensor"</span>})</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                          (<span class="kw">range</span> <span class="dv">1000</span>))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>        <span class="co">;; Create two buffers of different sizes</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        small-buffer (wd/make-windowed-dataset column-types <span class="dv">10</span>)</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        large-buffer (wd/make-windowed-dataset column-types <span class="dv">100</span>)]</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>    <span class="co">;; Process all data through both buffers</span></span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    (<span class="kw">let</span> [final-small (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! small-buffer lots-of-data)</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>          final-large (<span class="kw">reduce</span> wd/insert-to-windowed-dataset! large-buffer lots-of-data)]</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>      {<span class="at">:input-data-size</span> (<span class="kw">count</span> lots-of-data)</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">:small-buffer-final-size</span> (<span class="at">:current-size</span> final-small)</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">:large-buffer-final-size</span> (<span class="at">:current-size</span> final-large)</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">:memory-usage</span> <span class="st">"Constant - only depends on buffer size, not input size!"</span>})))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Memory efficiency test:</strong></p>
+<div class="sourceClojure">
+<div class="sourceCode" id="cb23"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>(memory-efficiency-test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="printedClojure">
-<div class="sourceCode" id="cb25"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:small-window</span> {<span class="at">:max-size</span> <span class="dv">10</span>, <span class="at">:final-size</span> <span class="dv">10</span>},</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:large-window</span> {<span class="at">:max-size</span> <span class="dv">100</span>, <span class="at">:final-size</span> <span class="dv">100</span>},</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:input-data-size</span> <span class="dv">1000</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode clojure code-with-copy"><code class="sourceCode clojure"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>{<span class="at">:input-data-size</span> <span class="dv">1000</span>,</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> <span class="at">:small-buffer-final-size</span> <span class="dv">10</span>,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a> <span class="at">:large-buffer-final-size</span> <span class="dv">100</span>,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="at">:memory-usage</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="st">"Constant - only depends on buffer size, not input size!"</span>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="practical-applications" class="level2">
+<h2 class="anchored" data-anchor-id="practical-applications">Practical Applications</h2>
+<p><strong>Windowed datasets are perfect for:</strong></p>
+<ol type="1">
+<li><strong>Real-time monitoring</strong> - Track recent system metrics, sensor readings, or user activity</li>
+<li><strong>Streaming alerts</strong> - Detect anomalies based on recent patterns without storing everything</li>
+<li><strong>Live dashboards</strong> - Show current trends and recent history with bounded memory</li>
+<li><strong>IoT data processing</strong> - Handle continuous sensor streams efficiently</li>
+<li><strong>Financial analysis</strong> - Calculate technical indicators on streaming market data</li>
+<li><strong>ML feature engineering</strong> - Create time-based features for online learning models</li>
+</ol>
+<p><strong>Key Benefits:</strong></p>
+<ul>
+<li><strong>Predictable memory usage</strong> - Never grows beyond your specified window size</li>
+<li><strong>Efficient time queries</strong> - Binary search makes time-based filtering fast</li>
+<li><strong>Streaming-friendly</strong> - Designed for continuous data processing</li>
+<li><strong>Seamless integration</strong> - Works naturally with existing Clojure data tools</li>
+</ul>
 </section>
 <section id="summary" class="level2">
 <h2 class="anchored" data-anchor-id="summary">Summary</h2>
-</section>
-<section id="key-benefits-of-windowed-datasets" class="level2">
-<h2 class="anchored" data-anchor-id="key-benefits-of-windowed-datasets">Key Benefits of Windowed Datasets</h2>
-<ul>
-<li><strong>Constant Memory Usage</strong>: Fixed-size circular buffer regardless of input stream size</li>
-<li><strong>Efficient Time Windows</strong>: O(log n) binary search for time-based filtering<br>
-</li>
-<li><strong>Streaming-Friendly</strong>: Designed for real-time data processing</li>
-<li><strong>Tablecloth Integration</strong>: Seamless conversion to/from regular datasets</li>
-<li><strong>High Performance</strong>: Built on <code>tech.ml.dataset</code> for efficient numeric operations</li>
-</ul>
-</section>
-<section id="common-use-cases" class="level2">
-<h2 class="anchored" data-anchor-id="common-use-cases">Common Use Cases</h2>
-<ol type="1">
-<li><strong>Real-time Analytics</strong>: Moving averages, trend detection, anomaly detection</li>
-<li><strong>Streaming ML</strong>: Feature engineering for time-series models</li>
-<li><strong>Sensor Data Processing</strong>: IoT and monitoring applications</li>
-<li><strong>Financial Data</strong>: Technical indicators and risk metrics</li>
-<li><strong>Scientific Computing</strong>: Signal processing and time-series analysis</li>
-</ol>
+<p>Windowed datasets provide a simple but powerful abstraction for handling streaming time-series data. By maintaining only recent data, you can build efficient real-time analytics systems that don’t consume unbounded memory.</p>
+<p>The key insight is that many analyses only need recent context, not complete history. Windowed datasets make this pattern explicit and efficient.</p>
 <div style="background-color:grey;height:2px;width:100%;"></div>
 <div><pre><small><small>source: <a href="https://github.com/scicloj/windowed-dataset/blob/main/notebooks/windowed_dataset_examples.clj">notebooks/windowed_dataset_examples.clj</a></small></small></pre></div>
 
@@ -1313,8 +1436,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="./index.html" class="pagination-link" aria-label="Status">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Status</span></span>
+      <a href="./index.html" class="pagination-link" aria-label="Docs">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">Docs</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

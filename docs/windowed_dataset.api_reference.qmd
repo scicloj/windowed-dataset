@@ -50,18 +50,18 @@ The `WindowedDataset` record implements a circular buffer data structure optimiz
            current-position ; current write position (circular index)])
 ```
 
-**Key Characteristics:**
+**Key characteristics:**
 
-- **Mutable** - Use with caution
-- **Fixed Memory** - Pre-allocates arrays for maximum performance
-- **Circular Buffer** - New data overwrites oldest when buffer is full
-- **Chronological Access** - Functions provide data in insertion order
-- **Zero-Copy Views** - Time windows are extracted without data copying
+- **Mutable** - Designed for performance in streaming scenarios
+- **Fixed memory** - Pre-allocates space for predictable memory usage
+- **Circular buffer** - Automatically overwrites oldest data when full
+- **Chronological access** - Data is always returned in insertion order
+- **Zero-copy views** - Time windows are extracted without copying data
 
-**Usage Pattern:**
+**Typical workflow:**
 
 1. Create with `make-windowed-dataset` specifying column types and buffer size
-2. Insert streaming data with `insert-to-windowed-dataset!` (❗**Caution: mutating the internal dataset.**)
+2. Insert streaming data with `insert-to-windowed-dataset!` 
 3. Extract time windows with `windowed-dataset->time-window-dataset`
 4. Compute metrics over specific time periods
 
@@ -232,9 +232,9 @@ _unnamed [3 3]:
 
 |                     :timestamp | :temperature | :sensor-id |
 |--------------------------------|-------------:|------------|
-| 2025-08-07T22:50:54.576029741Z |         22.5 |   temp-001 |
-| 2025-08-07T22:51:24.576029741Z |         23.1 |   temp-001 |
-| 2025-08-07T22:51:54.576029741Z |         22.8 |   temp-001 |
+| 2025-08-07T22:59:15.306466407Z |         22.5 |   temp-001 |
+| 2025-08-07T22:59:45.306466407Z |         23.1 |   temp-001 |
+| 2025-08-07T23:00:15.306466407Z |         22.8 |   temp-001 |
 
 
 :::
@@ -324,11 +324,11 @@ _unnamed [5 3]:
 
 |                     :timestamp | :temperature | :reading-id |
 |--------------------------------|-------------:|------------:|
-| 2025-08-07T22:52:24.584498006Z |         23.2 |           3 |
-| 2025-08-07T22:52:54.584498006Z |         22.9 |           4 |
-| 2025-08-07T22:53:24.584498006Z |         23.1 |           5 |
-| 2025-08-07T22:53:54.584498006Z |         22.7 |           6 |
-| 2025-08-07T22:54:24.584498006Z |         22.4 |           7 |
+| 2025-08-07T23:00:45.314059998Z |         23.2 |           3 |
+| 2025-08-07T23:01:15.314059998Z |         22.9 |           4 |
+| 2025-08-07T23:01:45.314059998Z |         23.1 |           5 |
+| 2025-08-07T23:02:15.314059998Z |         22.7 |           6 |
+| 2025-08-07T23:02:45.314059998Z |         22.4 |           7 |
 
 
 :::
@@ -381,16 +381,16 @@ Binary search to find the first index where timestamp >= target-time.
 
 ::: {.printedClojure}
 ```clojure
-({:target-time "2025-08-07T22:52:24.588222101Z",
+({:target-time "2025-08-07T23:00:45.317992333Z",
   :description "Between timestamps",
   :found-position 2}
- {:target-time "2025-08-07T22:52:54.588222101Z",
+ {:target-time "2025-08-07T23:01:15.317992333Z",
   :description "Exact match",
   :found-position 2}
- {:target-time "2025-08-07T22:50:24.588222101Z",
+ {:target-time "2025-08-07T22:58:45.317992333Z",
   :description "Before all timestamps",
   :found-position 0}
- {:target-time "2025-08-07T22:55:54.588222101Z",
+ {:target-time "2025-08-07T23:04:15.317992333Z",
   :description "After all timestamps",
   :found-position 5})
 
@@ -455,8 +455,8 @@ Return a regular dataset as a view over the content of a windowed dataset,
 
 ```{=html}
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-2-minutes
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T22:55:54.601134695Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T22:56:24.601134695Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T22:56:54.601134695Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T22:57:24.601134695Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T22:57:54.601134695Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-minutes
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [11 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T22:52:54.601134695Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">4</td></tr><tr><td>2025-08-07T22:53:24.601134695Z</td><td style="text-align:right;">22.7</td><td style="text-align:right;">5</td></tr><tr><td>2025-08-07T22:53:54.601134695Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">6</td></tr><tr><td>2025-08-07T22:54:24.601134695Z</td><td style="text-align:right;">22.4</td><td style="text-align:right;">7</td></tr><tr><td>2025-08-07T22:54:54.601134695Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">8</td></tr><tr><td>2025-08-07T22:55:24.601134695Z</td><td style="text-align:right;">21.8</td><td style="text-align:right;">9</td></tr><tr><td>2025-08-07T22:55:54.601134695Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T22:56:24.601134695Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T22:56:54.601134695Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T22:57:24.601134695Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T22:57:54.601134695Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:all-data
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:04:15.331444170Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:04:45.331444170Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:05:15.331444170Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:05:45.331444170Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:06:15.331444170Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-minutes
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [11 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th style="text-align:right;">:reading-id</th></tr></thead><tbody><tr><td>2025-08-07T23:01:15.331444170Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">4</td></tr><tr><td>2025-08-07T23:01:45.331444170Z</td><td style="text-align:right;">22.7</td><td style="text-align:right;">5</td></tr><tr><td>2025-08-07T23:02:15.331444170Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">6</td></tr><tr><td>2025-08-07T23:02:45.331444170Z</td><td style="text-align:right;">22.4</td><td style="text-align:right;">7</td></tr><tr><td>2025-08-07T23:03:15.331444170Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">8</td></tr><tr><td>2025-08-07T23:03:45.331444170Z</td><td style="text-align:right;">21.8</td><td style="text-align:right;">9</td></tr><tr><td>2025-08-07T23:04:15.331444170Z</td><td style="text-align:right;">22.2</td><td style="text-align:right;">10</td></tr><tr><td>2025-08-07T23:04:45.331444170Z</td><td style="text-align:right;">22.0</td><td style="text-align:right;">11</td></tr><tr><td>2025-08-07T23:05:15.331444170Z</td><td style="text-align:right;">22.6</td><td style="text-align:right;">12</td></tr><tr><td>2025-08-07T23:05:45.331444170Z</td><td style="text-align:right;">22.1</td><td style="text-align:right;">13</td></tr><tr><td>2025-08-07T23:06:15.331444170Z</td><td style="text-align:right;">22.5</td><td style="text-align:right;">14</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:all-data
 </code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [15 2]:</p><table class="table"><thead><tr><th style="text-align:right;">:reading-id</th><th style="text-align:right;">:temperature</th></tr></thead><tbody><tr><td style="text-align:right;">0</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">1</td><td style="text-align:right;">22.3</td></tr><tr><td style="text-align:right;">2</td><td style="text-align:right;">21.9</td></tr><tr><td style="text-align:right;">3</td><td style="text-align:right;">22.5</td></tr><tr><td style="text-align:right;">4</td><td style="text-align:right;">22.2</td></tr><tr><td style="text-align:right;">5</td><td style="text-align:right;">22.7</td></tr><tr><td style="text-align:right;">6</td><td style="text-align:right;">22.0</td></tr><tr><td style="text-align:right;">7</td><td style="text-align:right;">22.4</td></tr><tr><td style="text-align:right;">8</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">9</td><td style="text-align:right;">21.8</td></tr><tr><td style="text-align:right;">10</td><td style="text-align:right;">22.2</td></tr><tr><td style="text-align:right;">11</td><td style="text-align:right;">22.0</td></tr><tr><td style="text-align:right;">12</td><td style="text-align:right;">22.6</td></tr><tr><td style="text-align:right;">13</td><td style="text-align:right;">22.1</td></tr><tr><td style="text-align:right;">14</td><td style="text-align:right;">22.5</td></tr></tbody></table></div></div></td></tr></table></div><p>}</p></div>
 ```
 
@@ -582,10 +582,10 @@ _unnamed [4 3]:
 
 |                  :timestamp | :value | :moving-avg |
 |-----------------------------|-------:|------------:|
-| 2025-08-07T22:50:54.616251Z |   10.0 |             |
-| 2025-08-07T22:51:24.616253Z |   20.0 |        10.0 |
-| 2025-08-07T22:51:54.616268Z |   15.0 |        15.0 |
-| 2025-08-07T22:52:24.616270Z |   25.0 |        15.0 |
+| 2025-08-07T22:59:15.347768Z |   10.0 |             |
+| 2025-08-07T22:59:45.347771Z |   20.0 |        10.0 |
+| 2025-08-07T23:00:15.347783Z |   15.0 |        15.0 |
+| 2025-08-07T23:00:45.347785Z |   25.0 |        15.0 |
 
 
 :::

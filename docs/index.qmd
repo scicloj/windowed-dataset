@@ -18,112 +18,128 @@ code-block-background: true
 .clay-side-by-side {margin: 1em 0}
 </style>
 <script src="index_files/md-default0.js" type="text/javascript"></script><script src="index_files/md-default1.js" type="text/javascript"></script>
-A general-purpose Clojure library for efficient windowed dataset operations on streaming time-series data.
+A Clojure library for efficient time-series analysis with fixed-memory streaming data processing.
 
-## Status
-alpha stage, might move elsewhere
+## Docs
+[Here](https://scicloj.github.io/windowed-dataset)
 
 ## Overview
-The Windowed Dataset library provides a circular buffer-based dataset implementation that maintains a fixed-size window of the most recent data. This enables efficient streaming data analysis and time-series processing with bounded memory usage, making it ideal for real-time analytics, IoT applications, and scientific computing.
+
+Working with streaming data often means dealing with two competing needs: analyzing recent trends while keeping memory usage under control. Windowed Dataset solves this by providing a circular buffer that maintains only the most recent N data points, automatically discarding older data as new data arrives.
+
+Think of it as a sliding window over your data stream - you always see the most recent activity while using constant memory, regardless of how much data flows through your system.
+
+## Status
+Alpha stage - API may change
 
 ## Key Features
 
-- **Caution: Mutable** - Use with care
-- **Constant Memory Usage** - Fixed-size circular buffer regardless of input stream size
-- **Efficient Time Windows** - O(log n) binary search for time-based data filtering  
-- **Streaming-Friendly** - Designed for real-time data processing workflows
-- **Tablecloth Integration** - Seamless conversion to/from regular datasets
-- **High Performance** - Built on tech.v3.datatype for efficient numeric operations
-- **Type-Aware** - Support for different column data types (numeric, temporal, string)
+- **Fixed memory usage** - Process unlimited streaming data with constant memory footprint
+- **Time-based windows** - Extract data from specific time ranges (e.g., "last 5 minutes")
+- **Streaming-friendly** - Insert new data in constant time
+- **Seamless integration** - Works naturally with Tablecloth/tech.ml.dataset
+- **Zero-copy views** - Extract time windows without data copying
+
+⚠️ **Note**: This library uses mutable data structures for performance. Use with appropriate care in concurrent environments.
 
 ## Installation
 
 Add to your `deps.edn`:
 
 ```clojure
-{:deps {windowed-dataset {:local/root "path/to/windowed-dataset"}}}
+{:deps {scicloj/windowed-dataset {:local/root "path/to/windowed-dataset"}}}
 ```
 
-Or include the source directly in your project.
-
-## Quick Start
+## Quick Example
 
 ```clojure
 (require '[scicloj.windowed-dataset.api :as wd]
          '[java-time.api :as java-time])
 
-;; Define column types for your data
-(def column-types {:timestamp :instant :value :float64 :sensor-id :string})
+;; Create a buffer for temperature sensor data (keep last 100 readings)
+(def sensor-buffer 
+  (wd/make-windowed-dataset {:timestamp :instant 
+                             :temperature :float64 
+                             :location :string} 100))
 
-;; Create a windowed dataset with maximum size of 100 records
-(def windowed-ds (wd/make-windowed-dataset column-types 100))
-
-;; Insert streaming data
-(def updated-ds 
+;; Add streaming data
+(def updated-buffer 
   (wd/insert-to-windowed-dataset! 
-    windowed-ds 
+    sensor-buffer 
     {:timestamp (java-time/instant)
-     :value 42.5
-     :sensor-id "sensor-1"}))
+     :temperature 23.5
+     :location "greenhouse-1"}))
 
-;; Convert to regular dataset for analysis
-(def regular-ds (wd/windowed-dataset->dataset updated-ds))
+;; Get all current data as a regular dataset
+(wd/windowed-dataset->dataset updated-buffer)
 
-;; Extract data from a specific time window (last 5 seconds)
-(def recent-data 
-  (wd/windowed-dataset->time-window-dataset updated-ds :timestamp 5000))
+;; Get only the last 5 minutes of data
+(wd/windowed-dataset->time-window-dataset updated-buffer :timestamp 300000)
 ```
 
-## Use Cases
+## Common Patterns
 
-### Real-time Analytics
+### Streaming Analytics
+Calculate metrics on recent data without storing the entire history:
+
 ```clojure
-;; Calculate moving averages on streaming data
-(defn moving-average [windowed-ds]
-  (let [data (wd/windowed-dataset->dataset windowed-ds)
-        values (:value data)]
-    (when (seq values)
-      (/ (reduce + values) (count values)))))
+(defn current-average [windowed-ds]
+  (let [recent-data (wd/windowed-dataset->dataset windowed-ds)
+        temperatures (:temperature recent-data)]
+    (when (seq temperatures)
+      (/ (reduce + temperatures) (count temperatures)))))
 ```
 
-### Time Series Feature Engineering
+### Historical Analysis
+Add progressive features to existing time-series data:
+
 ```clojure
-;; Add progressive features to historical data
 (wd/add-column-by-windowed-fn 
-  time-series-data
-  {:colname :rolling-mean
-   :windowed-fn moving-average
+  historical-data
+  {:colname :rolling-average
+   :windowed-fn current-average
    :windowed-dataset-size 50})
 ```
 
-### IoT Sensor Processing
+### Real-time Processing
+Process continuous data streams with bounded memory:
+
 ```clojure
-;; Process sensor data with fixed memory footprint
+;; Process sensor readings as they arrive
 (reduce wd/insert-to-windowed-dataset! 
-        sensor-windowed-ds 
-        incoming-sensor-stream)
+        sensor-buffer 
+        real-time-sensor-stream)
 ```
 
-## Performance Characteristics
+## When to Use This
 
-- **Memory** - O(window-size) regardless of total data processed
-- **Insertion** - O(1) amortized time complexity
-- **Time Window Queries** - O(log n) using binary search
-- **Conversion to Dataset** - zero copy (a dataset is a view)
+**Great for:**
+- Real-time dashboards and monitoring
+- Streaming analytics and alerts  
+- IoT sensor data processing
+- Financial tick data analysis
+- Online feature engineering for ML models
+
+**Not ideal for:**
+- Small datasets that fit in memory
+- Analyses requiring access to full historical data
+- Applications needing data persistence across restarts
+
+## Performance
+
+- **Memory**: O(window-size) - constant regardless of total data processed
+- **Insertion**: O(1) - constant time to add new data
+- **Time queries**: O(log n) - efficient binary search for time ranges
+- **Conversion**: Zero-copy - views over existing data
 
 ## Dependencies
 
-- `Tablecloth` (a `tech.ml.dataset` wrapper)
-- `java-time.api` - Modern date/time handling
+- [Tablecloth](https://scicloj.github.io/tablecloth/) - For dataset operations
+- [java-time](https://github.com/dm3/clojure.java-time) - For time handling
 
 ## License
 
 Copyright © 2025 Scicloj
-
-_EPLv1.0 is just the default for projects generated by `clj-new`: you are not_
-_required to open source this project, nor are you required to use EPLv1.0!_
-_Feel free to remove or change the `LICENSE` file and remove or update this_
-_section of the `README.md` file!_
 
 Distributed under the Eclipse Public License version 1.0.
 

@@ -22,10 +22,7 @@ code-block-background: true
 ::: {.sourceClojure}
 ```clojure
 (ns windowed-dataset-examples
-  "Examples and demonstrations of windowed dataset functionality.
-  
-  This notebook showcases the core capabilities of the windowed-dataset library
-  for streaming data analysis and time-series processing."
+  "Examples demonstrating windowed dataset functionality for streaming data analysis."
   (:require [scicloj.windowed-dataset.api :as wd]
             [tablecloth.api :as tc]
             [tablecloth.column.api :as tcc]
@@ -39,42 +36,52 @@ code-block-background: true
 
 # Windowed Dataset Examples
 
-This notebook demonstrates the core functionality of windowed datasets
-for streaming data analysis and time-series processing.
+This notebook shows how to use windowed datasets for streaming data analysis.
+We'll work with temperature sensor data as a relatable example, but the same 
+patterns apply to any time-series data.
 
 
-## Basic Usage
+## The Problem: Streaming Data with Limited Memory
 
-Create a simple windowed dataset with timestamp and value columns
+Imagine you're processing temperature readings from sensors. New readings arrive
+continuously, but you only care about recent trends and don't want to store
+years of historical data in memory.
+
+Windowed datasets solve this by maintaining a "sliding window" of recent data.
+
+
+## Basic Setup
+
+Let's define our data structure: timestamp, temperature, and sensor location
 
 
 ::: {.sourceClojure}
 ```clojure
-(def sample-column-types
+(def column-types
   {:timestamp :instant
-   :value :float64
-   :sensor-id :string})
+   :temperature :float64
+   :location :string})
 ```
 :::
 
 
-Create a windowed dataset with maximum size of 5 records
+Create a windowed dataset that keeps only the last 5 readings
 
 
 ::: {.sourceClojure}
 ```clojure
-(def windowed-ds
-  (wd/make-windowed-dataset sample-column-types 5))
+(def temperature-buffer
+  (wd/make-windowed-dataset column-types 5))
 ```
 :::
 
 
-**Initial windowed dataset:**
+**Initial state - empty buffer:**
 
 
 ::: {.sourceClojure}
 ```clojure
-windowed-ds
+temperature-buffer
 ```
 :::
 
@@ -82,35 +89,35 @@ windowed-ds
 
 ```{=html}
 <div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:dataset
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:column-types {:timestamp :instant, :value :float64, :sensor-id :string}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:max-size 5</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-size 0</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-position 0</code></pre></div></div><p>}</p></div>
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:column-types {:timestamp :instant, :temperature :float64, :location :string}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:max-size 5</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-size 0</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-position 0</code></pre></div></div><p>}</p></div>
 ```
 
 
 
-## Inserting Data
+## Simulating Streaming Data
 
-Let's create some sample time-series data
+Create sample temperature readings (like data from a greenhouse monitoring system)
 
 
 ::: {.sourceClojure}
 ```clojure
-(def sample-data
+(def sample-readings
   (let [start-time (java-time/instant)]
     (map (fn [i]
-           {:timestamp (java-time/plus start-time (java-time/seconds i))
-            :value (+ 10.0 (* 2.0 (Math/sin (/ i 2.0))))
-            :sensor-id "sensor-1"})
+           {:timestamp (java-time/plus start-time (java-time/seconds (* i 30)))
+            :temperature (+ 22.0 (* 2.0 (Math/sin (/ i 3.0)))) ; Simulated daily variation
+            :location "greenhouse-a"})
          (range 10))))
 ```
 :::
 
 
-**Sample time-series data (first 5 rows):**
+**Sample data - first 5 readings:**
 
 
 ::: {.sourceClojure}
 ```clojure
-(tc/dataset (take 5 sample-data))
+(tc/dataset (take 5 sample-readings))
 ```
 :::
 
@@ -118,118 +125,114 @@ Let's create some sample time-series data
 ::: {.clay-dataset}
 _unnamed [5 3]:
 
-|                  :timestamp |      :value | :sensor-id |
-|-----------------------------|------------:|------------|
-| 2025-08-07T22:50:54.238091Z | 10.00000000 |   sensor-1 |
-| 2025-08-07T22:50:55.238091Z | 10.95885108 |   sensor-1 |
-| 2025-08-07T22:50:56.238091Z | 11.68294197 |   sensor-1 |
-| 2025-08-07T22:50:57.238091Z | 11.99498997 |   sensor-1 |
-| 2025-08-07T22:50:58.238091Z | 11.81859485 |   sensor-1 |
+|                  :timestamp | :temperature |    :location |
+|-----------------------------|-------------:|--------------|
+| 2025-08-07T22:59:14.995218Z |  22.00000000 | greenhouse-a |
+| 2025-08-07T22:59:44.995218Z |  22.65438939 | greenhouse-a |
+| 2025-08-07T23:00:14.995218Z |  23.23673961 | greenhouse-a |
+| 2025-08-07T23:00:44.995218Z |  23.68294197 | greenhouse-a |
+| 2025-08-07T23:01:14.995218Z |  23.94387580 | greenhouse-a |
 
 
 :::
 
 
-Insert data progressively and observe the windowed dataset behavior
+
+## Watching the Window in Action
+
+Let's insert data one by one and watch how the window behaves
 
 
 ::: {.sourceClojure}
 ```clojure
-(defn demonstrate-progressive-insertion []
-  (reduce (fn [acc-ds row]
-            (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
-                  regular-ds (wd/windowed-dataset->dataset updated-ds)]
-              (println (str "After inserting row with value " (:value row) ":"))
-              (println (str "  Window size: " (:current-size updated-ds)))
-              (println (str "  Current position: " (:current-position updated-ds)))
-              (println (str "  Data in window: " (vec (:value regular-ds))))
-              (println)
-              updated-ds))
-          windowed-ds
-          (take 8 sample-data)))
+(defn show-window-evolution []
+  (let [results (atom [])]
+    (reduce (fn [buffer reading]
+              (let [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)
+                    current-data (wd/windowed-dataset->dataset updated-buffer)]
+                (swap! results conj
+                       {:reading-number (count @results)
+                        :buffer-size (:current-size updated-buffer)
+                        :temperatures (vec (:temperature current-data))})
+                updated-buffer))
+            temperature-buffer
+            (take 8 sample-readings))
+    @results))
 ```
 :::
 
 
-**Progressive insertion demonstration:**
+**Window evolution as data arrives:**
 
 
 ::: {.sourceClojure}
 ```clojure
-(kind/code
- (with-out-str (demonstrate-progressive-insertion)))
+(tc/dataset (show-window-evolution))
 ```
 :::
 
 
+::: {.clay-dataset}
+_unnamed [8 3]:
+
+| :reading-number | :buffer-size |                                                   :temperatures |
+|----------------:|-------------:|-----------------------------------------------------------------|
+|               0 |            1 |                                                          [22.0] |
+|               1 |            2 |                                       [22.0 22.654389393592304] |
+|               2 |            3 |                    [22.0 22.654389393592304 23.236739606139473] |
+|               3 |            4 | [22.0 22.654389393592304 23.236739606139473 23.682941969615793] |
+|               4 |            5 | [22.0                                                           |
+|                 |              |  22.654389393592304                                             |
+|                 |              |  23.236739606139473                                             |
+|                 |              |  23.682941969615793                                             |
+|                 |              |  23.943875802726627]                                            |
+|               5 |            5 | [22.654389393592304                                             |
+|                 |              |  23.236739606139473                                             |
+|                 |              |  23.682941969615793                                             |
+|                 |              |  23.943875802726627                                             |
+|                 |              |  23.99081591550353]                                             |
+|               6 |            5 | [23.236739606139473                                             |
+|                 |              |  23.682941969615793                                             |
+|                 |              |  23.943875802726627                                             |
+|                 |              |  23.99081591550353                                              |
+|                 |              |  23.818594853651362]                                            |
+|               7 |            5 | [23.682941969615793                                             |
+|                 |              |  23.943875802726627                                             |
+|                 |              |  23.99081591550353                                              |
+|                 |              |  23.818594853651362                                             |
+|                 |              |  23.44617176347665]                                             |
+
+
+:::
+
+
+Notice how:
+- The buffer grows until it reaches maximum size (5)
+- After that, old data is automatically discarded to make room for new data
+- Memory usage stays constant regardless of how much data we process
+
+
+## Time-Based Windows
+
+Often you don't just want the last N readings - you want "all data from the last X minutes"
+
+Fill our buffer with all sample data
+
 
 ::: {.sourceClojure}
 ```clojure
-After inserting row with value 10.0:
-  Window size: 1
-  Current position: 1
-  Data in window: [10.0]
-
-After inserting row with value 10.958851077208406:
-  Window size: 2
-  Current position: 2
-  Data in window: [10.0 10.958851077208406]
-
-After inserting row with value 11.682941969615793:
-  Window size: 3
-  Current position: 3
-  Data in window: [10.0 10.958851077208406 11.682941969615793]
-
-After inserting row with value 11.994989973208108:
-  Window size: 4
-  Current position: 4
-  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108]
-
-After inserting row with value 11.818594853651364:
-  Window size: 5
-  Current position: 0
-  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364]
-
-After inserting row with value 11.196944288207913:
-  Window size: 5
-  Current position: 1
-  Data in window: [10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913]
-
-After inserting row with value 10.282240016119735:
-  Window size: 5
-  Current position: 2
-  Data in window: [11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735]
-
-After inserting row with value 9.29843354462076:
-  Window size: 5
-  Current position: 3
-  Data in window: [11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735 9.29843354462076]
-
-
+(def full-buffer
+  (reduce wd/insert-to-windowed-dataset! temperature-buffer sample-readings))
 ```
 :::
 
 
-
-## Time Window Functionality
-
-Create a windowed dataset with more data for time window examples
+**All data in buffer:**
 
 
 ::: {.sourceClojure}
 ```clojure
-(def full-windowed-ds
-  (reduce wd/insert-to-windowed-dataset! windowed-ds sample-data))
-```
-:::
-
-
-**Full windowed dataset converted to regular dataset:**
-
-
-::: {.sourceClojure}
-```clojure
-(wd/windowed-dataset->dataset full-windowed-ds)
+(wd/windowed-dataset->dataset full-buffer)
 ```
 :::
 
@@ -237,178 +240,86 @@ Create a windowed dataset with more data for time window examples
 ::: {.clay-dataset}
 _unnamed [5 3]:
 
-|                     :timestamp |      :value | :sensor-id |
-|--------------------------------|------------:|------------|
-| 2025-08-07T22:50:59.238091095Z | 11.19694429 |   sensor-1 |
-| 2025-08-07T22:51:00.238091095Z | 10.28224002 |   sensor-1 |
-| 2025-08-07T22:51:01.238091095Z |  9.29843354 |   sensor-1 |
-| 2025-08-07T22:51:02.238091095Z |  8.48639501 |   sensor-1 |
-| 2025-08-07T22:51:03.238091095Z |  8.04493976 |   sensor-1 |
+|                     :timestamp | :temperature |    :location |
+|--------------------------------|-------------:|--------------|
+| 2025-08-07T23:01:44.995218155Z |  23.99081592 | greenhouse-a |
+| 2025-08-07T23:02:14.995218155Z |  23.81859485 | greenhouse-a |
+| 2025-08-07T23:02:44.995218155Z |  23.44617176 | greenhouse-a |
+| 2025-08-07T23:03:14.995218155Z |  22.91454525 | greenhouse-a |
+| 2025-08-07T23:03:44.995218155Z |  22.28224002 | greenhouse-a |
 
 
 :::
 
 
-Demonstrate time window extraction
+Extract different time windows
 
 
 ::: {.sourceClojure}
 ```clojure
-(let [regular-ds (wd/windowed-dataset->dataset full-windowed-ds)
-      latest-time (last (:timestamp regular-ds))]
-  ;; **Time window examples:**
-  {:last-3-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 3000)
-   :last-5-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 5000)
-   :latest-timestamp latest-time})
+(let [now (:timestamp (last sample-readings))]
+  {:last-90-seconds (wd/windowed-dataset->time-window-dataset full-buffer :timestamp 90000)
+   :last-150-seconds (wd/windowed-dataset->time-window-dataset full-buffer :timestamp 150000)
+   :reference-time now})
 ```
 :::
 
 
 
 ```{=html}
-<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-3-seconds
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [4 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td>2025-08-07T22:51:00.238091095Z</td><td style="text-align:right;">10.28224002</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:01.238091095Z</td><td style="text-align:right;">9.29843354</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:02.238091095Z</td><td style="text-align:right;">8.48639501</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:03.238091095Z</td><td style="text-align:right;">8.04493976</td><td>sensor-1</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-seconds
-</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td>2025-08-07T22:50:59.238091095Z</td><td style="text-align:right;">11.19694429</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:00.238091095Z</td><td style="text-align:right;">10.28224002</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:01.238091095Z</td><td style="text-align:right;">9.29843354</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:02.238091095Z</td><td style="text-align:right;">8.48639501</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:03.238091095Z</td><td style="text-align:right;">8.04493976</td><td>sensor-1</td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:latest-timestamp #inst &quot;2025-08-07T22:51:03.238091095-00:00&quot;</code></pre></div></div><p>}</p></div>
+<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-90-seconds
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [4 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:02:14.995218155Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:02:44.995218155Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:03:14.995218155Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:03:44.995218155Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-150-seconds
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:temperature</th><th>:location</th></tr></thead><tbody><tr><td>2025-08-07T23:01:44.995218155Z</td><td style="text-align:right;">23.99081592</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:02:14.995218155Z</td><td style="text-align:right;">23.81859485</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:02:44.995218155Z</td><td style="text-align:right;">23.44617176</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:03:14.995218155Z</td><td style="text-align:right;">22.91454525</td><td>greenhouse-a</td></tr><tr><td>2025-08-07T23:03:44.995218155Z</td><td style="text-align:right;">22.28224002</td><td>greenhouse-a</td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:reference-time #inst &quot;2025-08-07T23:03:44.995218155-00:00&quot;</code></pre></div></div><p>}</p></div>
 ```
 
 
 
-## Real-time Streaming Simulation
+## Real-World Pattern: Streaming Analytics
 
-Demonstrate how windowed datasets can be used for streaming analysis
+Here's how you might calculate a running average temperature in a real application
 
 
 ::: {.sourceClojure}
 ```clojure
-(defn calculate-moving-average [windowed-ds]
-  "Calculate moving average from a windowed dataset"
-  (let [regular-ds (wd/windowed-dataset->dataset windowed-ds)
-        values (:value regular-ds)]
-    (when (seq values)
-      (dfn/mean values))))
+(defn calculate-average-temperature [buffer]
+  "Calculate current average temperature from buffer"
+  (let [current-data (wd/windowed-dataset->dataset buffer)
+        temperatures (:temperature current-data)]
+    (when (seq temperatures)
+      (dfn/mean temperatures))))
 ```
 :::
 
 
-Simulate streaming analysis with moving averages
+Simulate processing readings as they arrive, calculating moving averages
 
 
 ::: {.sourceClojure}
 ```clojure
-(defn streaming-analysis-demo []
+(defn streaming-analytics-demo []
   (let [results (atom [])]
-    (reduce (fn [acc-ds row]
-              (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
-                    moving-avg (calculate-moving-average updated-ds)]
-                (swap! results conj {:timestamp (:timestamp row)
-                                     :value (:value row)
-                                     :moving-average moving-avg})
-                updated-ds))
-            windowed-ds
-            sample-data)
+    (reduce (fn [buffer reading]
+              (let [updated-buffer (wd/insert-to-windowed-dataset! buffer reading)
+                    avg-temp (calculate-average-temperature updated-buffer)]
+                (swap! results conj
+                       {:timestamp (:timestamp reading)
+                        :current-temperature (:temperature reading)
+                        :running-average avg-temp
+                        :readings-in-buffer (:current-size updated-buffer)})
+                updated-buffer))
+            temperature-buffer
+            sample-readings)
     @results))
 ```
 :::
 
 
-**Streaming analysis with moving averages:**
+**Streaming analytics results:**
 
 
 ::: {.sourceClojure}
 ```clojure
-(tc/dataset (streaming-analysis-demo))
-```
-:::
-
-
-::: {.clay-dataset}
-_unnamed [10 3]:
-
-|                  :timestamp |      :value | :moving-average |
-|-----------------------------|------------:|----------------:|
-| 2025-08-07T22:50:54.238091Z | 10.00000000 |     10.00000000 |
-| 2025-08-07T22:50:55.238091Z | 10.95885108 |     10.47942554 |
-| 2025-08-07T22:50:56.238091Z | 11.68294197 |     10.88059768 |
-| 2025-08-07T22:50:57.238091Z | 11.99498997 |     11.15919576 |
-| 2025-08-07T22:50:58.238091Z | 11.81859485 |     11.29107557 |
-| 2025-08-07T22:50:59.238091Z | 11.19694429 |     11.53046443 |
-| 2025-08-07T22:51:00.238091Z | 10.28224002 |     11.39514222 |
-| 2025-08-07T22:51:01.238091Z |  9.29843354 |     10.91824054 |
-| 2025-08-07T22:51:02.238091Z |  8.48639501 |     10.21652154 |
-| 2025-08-07T22:51:03.238091Z |  8.04493976 |      9.46179052 |
-
-
-:::
-
-
-
-## Advanced Example: Progressive Column Addition
-
-Demonstrate add-column-by-windowed-fn for batch processing
-
-
-::: {.sourceClojure}
-```clojure
-(def time-series-data
-  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant) (java-time/seconds %)) (range 10))
-               :value (map #(+ 5.0 (* 3.0 (Math/sin (/ % 1.5)))) (range 10))
-               :noise (repeatedly 10 #(* 0.5 (- (rand) 0.5)))}))
-```
-:::
-
-
-**Original time series:**
-
-
-::: {.sourceClojure}
-```clojure
-time-series-data
-```
-:::
-
-
-::: {.clay-dataset}
-_unnamed [10 3]:
-
-|                  :timestamp |     :value |      :noise |
-|-----------------------------|-----------:|------------:|
-| 2025-08-07T22:50:54.271095Z | 5.00000000 |  0.17921910 |
-| 2025-08-07T22:50:55.271149Z | 6.85510941 |  0.11550950 |
-| 2025-08-07T22:50:56.271154Z | 7.91581370 |  0.18040711 |
-| 2025-08-07T22:50:57.271156Z | 7.72789228 | -0.20914995 |
-| 2025-08-07T22:50:58.271158Z | 6.37181788 | -0.02834836 |
-| 2025-08-07T22:50:59.271160Z | 4.42829611 |  0.08674079 |
-| 2025-08-07T22:51:00.271162Z | 2.72959251 |  0.17570259 |
-| 2025-08-07T22:51:01.271164Z | 2.00313525 |  0.11306764 |
-| 2025-08-07T22:51:02.271166Z | 2.56001183 |  0.05813438 |
-| 2025-08-07T22:51:03.271169Z | 4.16175351 | -0.14664493 |
-
-
-:::
-
-
-Add progressive moving average column
-
-
-::: {.sourceClojure}
-```clojure
-(def windowed-moving-avg-fn
-  (fn [windowed-ds]
-    (calculate-moving-average windowed-ds)))
-```
-:::
-
-
-**Time series with progressive moving average:**
-
-
-::: {.sourceClojure}
-```clojure
-(wd/add-column-by-windowed-fn
- time-series-data
- {:colname :progressive-moving-avg
-  :windowed-fn windowed-moving-avg-fn
-  :windowed-dataset-size 120})
+(tc/dataset (streaming-analytics-demo))
 ```
 :::
 
@@ -416,55 +327,163 @@ Add progressive moving average column
 ::: {.clay-dataset}
 _unnamed [10 4]:
 
-|                  :timestamp |     :value |      :noise | :progressive-moving-avg |
-|-----------------------------|-----------:|------------:|------------------------:|
-| 2025-08-07T22:50:54.271095Z | 5.00000000 |  0.17921910 |                         |
-| 2025-08-07T22:50:55.271149Z | 6.85510941 |  0.11550950 |              5.00000000 |
-| 2025-08-07T22:50:56.271154Z | 7.91581370 |  0.18040711 |              5.92755470 |
-| 2025-08-07T22:50:57.271156Z | 7.72789228 | -0.20914995 |              6.59030770 |
-| 2025-08-07T22:50:58.271158Z | 6.37181788 | -0.02834836 |              6.87470385 |
-| 2025-08-07T22:50:59.271160Z | 4.42829611 |  0.08674079 |              6.77412665 |
-| 2025-08-07T22:51:00.271162Z | 2.72959251 |  0.17570259 |              6.38315490 |
-| 2025-08-07T22:51:01.271164Z | 2.00313525 |  0.11306764 |              5.86121741 |
-| 2025-08-07T22:51:02.271166Z | 2.56001183 |  0.05813438 |              5.37895714 |
-| 2025-08-07T22:51:03.271169Z | 4.16175351 | -0.14664493 |              5.06574100 |
+|                  :timestamp | :current-temperature | :running-average | :readings-in-buffer |
+|-----------------------------|---------------------:|-----------------:|--------------------:|
+| 2025-08-07T22:59:14.995218Z |          22.00000000 |      22.00000000 |                   1 |
+| 2025-08-07T22:59:44.995218Z |          22.65438939 |      22.32719470 |                   2 |
+| 2025-08-07T23:00:14.995218Z |          23.23673961 |      22.63037633 |                   3 |
+| 2025-08-07T23:00:44.995218Z |          23.68294197 |      22.89351774 |                   4 |
+| 2025-08-07T23:01:14.995218Z |          23.94387580 |      23.10358935 |                   5 |
+| 2025-08-07T23:01:44.995218Z |          23.99081592 |      23.50175254 |                   5 |
+| 2025-08-07T23:02:14.995218Z |          23.81859485 |      23.73459363 |                   5 |
+| 2025-08-07T23:02:44.995218Z |          23.44617176 |      23.77648006 |                   5 |
+| 2025-08-07T23:03:14.995218Z |          22.91454525 |      23.62280072 |                   5 |
+| 2025-08-07T23:03:44.995218Z |          22.28224002 |      23.29047356 |                   5 |
 
 
 :::
 
 
 
-## Performance Characteristics
+## Historical Analysis: Adding Progressive Features
 
-Demonstrate that windowed datasets maintain constant memory usage
+Sometimes you have historical data and want to see how metrics would have
+evolved over time, as if you were processing it in real-time.
 
 
 ::: {.sourceClojure}
 ```clojure
-(defn memory-usage-demo []
-  (let [large-dataset (map (fn [i]
-                             {:timestamp (java-time/plus (java-time/instant) (java-time/millis i))
-                              :value (rand)
-                              :sensor-id "perf-test"})
-                           (range 1000))
-        windowed-ds-small (wd/make-windowed-dataset sample-column-types 10)
-        windowed-ds-large (wd/make-windowed-dataset sample-column-types 100)]
-
-    {:small-window {:max-size 10
-                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-small large-dataset))}
-     :large-window {:max-size 100
-                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-large large-dataset))}
-     :input-data-size (count large-dataset)}))
+(def historical-temperatures
+  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant)
+                                                (java-time/seconds %))
+                               (range 12))
+               :temperature (map #(+ 20.0 (* 3.0 (Math/sin (/ % 2.0))))
+                                 (range 12))}))
 ```
 :::
 
 
-**Memory usage demonstration:**
+**Original historical data:**
 
 
 ::: {.sourceClojure}
 ```clojure
-(memory-usage-demo)
+historical-temperatures
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [12 2]:
+
+|                  :timestamp | :temperature |
+|-----------------------------|-------------:|
+| 2025-08-07T22:59:15.029262Z |  20.00000000 |
+| 2025-08-07T22:59:16.029312Z |  21.43827662 |
+| 2025-08-07T22:59:17.029317Z |  22.52441295 |
+| 2025-08-07T22:59:18.029319Z |  22.99248496 |
+| 2025-08-07T22:59:19.029321Z |  22.72789228 |
+| 2025-08-07T22:59:20.029323Z |  21.79541643 |
+| 2025-08-07T22:59:21.029325Z |  20.42336002 |
+| 2025-08-07T22:59:22.029327Z |  18.94765032 |
+| 2025-08-07T22:59:23.029328Z |  17.72959251 |
+| 2025-08-07T22:59:24.029330Z |  17.06740965 |
+| 2025-08-07T22:59:25.029332Z |  17.12322718 |
+| 2025-08-07T22:59:26.029335Z |  17.88337902 |
+
+
+:::
+
+
+Add a progressive moving average column
+
+
+::: {.sourceClojure}
+```clojure
+(def with-moving-average
+  (wd/add-column-by-windowed-fn
+   historical-temperatures
+   {:colname :progressive-average
+    :windowed-fn calculate-average-temperature
+    :windowed-dataset-size 120}))
+```
+:::
+
+
+**Historical data with progressive moving averages:**
+
+
+::: {.sourceClojure}
+```clojure
+with-moving-average
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [12 3]:
+
+|                  :timestamp | :temperature | :progressive-average |
+|-----------------------------|-------------:|---------------------:|
+| 2025-08-07T22:59:15.029262Z |  20.00000000 |                      |
+| 2025-08-07T22:59:16.029312Z |  21.43827662 |          20.00000000 |
+| 2025-08-07T22:59:17.029317Z |  22.52441295 |          20.71913831 |
+| 2025-08-07T22:59:18.029319Z |  22.99248496 |          21.32089652 |
+| 2025-08-07T22:59:19.029321Z |  22.72789228 |          21.73879363 |
+| 2025-08-07T22:59:20.029323Z |  21.79541643 |          21.93661336 |
+| 2025-08-07T22:59:21.029325Z |  20.42336002 |          21.91308054 |
+| 2025-08-07T22:59:22.029327Z |  18.94765032 |          21.70026332 |
+| 2025-08-07T22:59:23.029328Z |  17.72959251 |          21.35618670 |
+| 2025-08-07T22:59:24.029330Z |  17.06740965 |          20.95323179 |
+| 2025-08-07T22:59:25.029332Z |  17.12322718 |          20.56464957 |
+| 2025-08-07T22:59:26.029335Z |  17.88337902 |          20.25179299 |
+
+
+:::
+
+
+Notice how the moving average starts as nil (no data), then becomes the first value,
+then a true average as more data accumulates.
+
+
+## Memory Efficiency Demo
+
+Let's prove that windowed datasets use constant memory regardless of input size
+
+
+::: {.sourceClojure}
+```clojure
+(defn memory-efficiency-test []
+  (let [;; Create lots of data
+        lots-of-data (map (fn [i]
+                            {:timestamp (java-time/plus (java-time/instant)
+                                                        (java-time/millis i))
+                             :temperature (+ 20.0 (rand 10.0))
+                             :location "test-sensor"})
+                          (range 1000))
+
+        ;; Create two buffers of different sizes
+        small-buffer (wd/make-windowed-dataset column-types 10)
+        large-buffer (wd/make-windowed-dataset column-types 100)]
+
+    ;; Process all data through both buffers
+    (let [final-small (reduce wd/insert-to-windowed-dataset! small-buffer lots-of-data)
+          final-large (reduce wd/insert-to-windowed-dataset! large-buffer lots-of-data)]
+
+      {:input-data-size (count lots-of-data)
+       :small-buffer-final-size (:current-size final-small)
+       :large-buffer-final-size (:current-size final-large)
+       :memory-usage "Constant - only depends on buffer size, not input size!"})))
+```
+:::
+
+
+**Memory efficiency test:**
+
+
+::: {.sourceClojure}
+```clojure
+(memory-efficiency-test)
 ```
 :::
 
@@ -472,34 +491,44 @@ Demonstrate that windowed datasets maintain constant memory usage
 
 ::: {.printedClojure}
 ```clojure
-{:small-window {:max-size 10, :final-size 10},
- :large-window {:max-size 100, :final-size 100},
- :input-data-size 1000}
+{:input-data-size 1000,
+ :small-buffer-final-size 10,
+ :large-buffer-final-size 100,
+ :memory-usage
+ "Constant - only depends on buffer size, not input size!"}
 
 ```
 :::
 
 
 
+## Practical Applications
+
+**Windowed datasets are perfect for:**
+
+1. **Real-time monitoring** - Track recent system metrics, sensor readings, or user activity
+2. **Streaming alerts** - Detect anomalies based on recent patterns without storing everything
+3. **Live dashboards** - Show current trends and recent history with bounded memory
+4. **IoT data processing** - Handle continuous sensor streams efficiently
+5. **Financial analysis** - Calculate technical indicators on streaming market data
+6. **ML feature engineering** - Create time-based features for online learning models
+
+**Key Benefits:**
+
+- **Predictable memory usage** - Never grows beyond your specified window size
+- **Efficient time queries** - Binary search makes time-based filtering fast
+- **Streaming-friendly** - Designed for continuous data processing
+- **Seamless integration** - Works naturally with existing Clojure data tools
+
+
 ## Summary
 
+Windowed datasets provide a simple but powerful abstraction for handling streaming
+time-series data. By maintaining only recent data, you can build efficient real-time
+analytics systems that don't consume unbounded memory.
 
-## Key Benefits of Windowed Datasets
-
-- **Constant Memory Usage**: Fixed-size circular buffer regardless of input stream size
-- **Efficient Time Windows**: O(log n) binary search for time-based filtering  
-- **Streaming-Friendly**: Designed for real-time data processing
-- **Tablecloth Integration**: Seamless conversion to/from regular datasets
-- **High Performance**: Built on `tech.ml.dataset` for efficient numeric operations
-
-
-## Common Use Cases
-
-1. **Real-time Analytics**: Moving averages, trend detection, anomaly detection
-2. **Streaming ML**: Feature engineering for time-series models
-3. **Sensor Data Processing**: IoT and monitoring applications
-4. **Financial Data**: Technical indicators and risk metrics
-5. **Scientific Computing**: Signal processing and time-series analysis
+The key insight is that many analyses only need recent context, not complete history.
+Windowed datasets make this pattern explicit and efficient.
 
 
 ```{=html}
