@@ -233,7 +233,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="how-it-works" class="level2">
 <h2 class="anchored" data-anchor-id="how-it-works">How It Works</h2>
 <p>Under the hood, windowed datasets use a <strong>circular buffer</strong>. Imagine an array with a pointer that moves in a circle: when new data arrives, it overwrites the oldest data and moves the pointer forward. When the pointer reaches the end, it wraps back to the beginning.</p>
-<p>This simple technique provides powerful benefits: - <strong>Constant memory</strong>: The buffer never grows beyond your specified size - <strong>Fast insertion</strong>: Adding new data is always O(1) - just overwrite and increment - <strong>Automatic cleanup</strong>: No need to manually delete old data - it’s automatically replaced - <strong>Cache-friendly</strong>: Data stays in contiguous memory for better performance</p>
+<p>This simple technique provides powerful benefits:</p>
+<ul>
+<li><strong>Constant memory</strong>: The buffer never grows beyond your specified size</li>
+<li><strong>Fast insertion</strong>: Adding new data is always O(1) - just overwrite and increment</li>
+<li><strong>Automatic cleanup</strong>: No need to manually delete old data - it’s automatically replaced</li>
+<li><strong>Cache-friendly</strong>: Data stays in contiguous memory for better performance</li>
+</ul>
 </section>
 <section id="status" class="level2">
 <h2 class="anchored" data-anchor-id="status">Status</h2>
