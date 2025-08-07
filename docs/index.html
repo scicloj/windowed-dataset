@@ -168,6 +168,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#docs" id="toc-docs" class="nav-link active" data-scroll-target="#docs">Docs</a></li>
   <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#how-it-works" id="toc-how-it-works" class="nav-link" data-scroll-target="#how-it-works">How It Works</a></li>
   <li><a href="#status" id="toc-status" class="nav-link" data-scroll-target="#status">Status</a></li>
   <li><a href="#key-features" id="toc-key-features" class="nav-link" data-scroll-target="#key-features">Key Features</a></li>
   <li><a href="#installation" id="toc-installation" class="nav-link" data-scroll-target="#installation">Installation</a></li>
@@ -228,6 +229,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
 <p>Working with streaming data often means dealing with two competing needs: analyzing recent trends while keeping memory usage under control. Windowed Dataset solves this by providing a circular buffer that maintains only the most recent N data points, automatically discarding older data as new data arrives.</p>
 <p>Think of it as a sliding window over your data stream - you always see the most recent activity while using constant memory, regardless of how much data flows through your system.</p>
+</section>
+<section id="how-it-works" class="level2">
+<h2 class="anchored" data-anchor-id="how-it-works">How It Works</h2>
+<p>Under the hood, windowed datasets use a <strong>circular buffer</strong>. Imagine an array with a pointer that moves in a circle: when new data arrives, it overwrites the oldest data and moves the pointer forward. When the pointer reaches the end, it wraps back to the beginning.</p>
+<p>This simple technique provides powerful benefits: - <strong>Constant memory</strong>: The buffer never grows beyond your specified size - <strong>Fast insertion</strong>: Adding new data is always O(1) - just overwrite and increment - <strong>Automatic cleanup</strong>: No need to manually delete old data - it’s automatically replaced - <strong>Cache-friendly</strong>: Data stays in contiguous memory for better performance</p>
 </section>
 <section id="status" class="level2">
 <h2 class="anchored" data-anchor-id="status">Status</h2>
