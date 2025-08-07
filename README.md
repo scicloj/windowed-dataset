@@ -2,8 +2,10 @@
 
 A general-purpose Clojure library for efficient windowed dataset operations on streaming time-series data.
 
-## Overview
+## Status
+alpha stage, might move elsewhere
 
+## Overview
 The Windowed Dataset library provides a circular buffer-based dataset implementation that maintains a fixed-size window of the most recent data. This enables efficient streaming data analysis and time-series processing with bounded memory usage, making it ideal for real-time analytics, IoT applications, and scientific computing.
 
 ## Key Features
@@ -28,7 +30,7 @@ Or include the source directly in your project.
 ## Quick Start
 
 ```clojure
-(require '[windowed-dataset.core :as wd]
+(require '[scicloj.windowed-dataset.api :as wd]
          '[java-time.api :as java-time])
 
 ;; Define column types for your data
@@ -52,24 +54,6 @@ Or include the source directly in your project.
 (def recent-data 
   (wd/windowed-dataset->time-window-dataset updated-ds :timestamp 5000))
 ```
-
-## Core API
-
-### Creating Windowed Datasets
-
-- `make-windowed-dataset [column-types max-size]` - Create an empty windowed dataset
-- `copy-windowed-dataset [windowed-dataset]` - Create a deep copy
-
-### Data Operations
-
-- `insert-to-windowed-dataset! [windowed-dataset row]` - Insert new data row
-- `windowed-dataset->dataset [windowed-dataset]` - Convert to regular dataset
-- `windowed-dataset->time-window-dataset [windowed-dataset timestamp-col time-window]` - Extract time window
-
-### Advanced Operations
-
-- `add-column-by-windowed-fn [time-series options]` - Add progressive analysis columns
-- `windowed-dataset-indices [windowed-dataset]` - Get data indices in insertion order
 
 ## Use Cases
 
@@ -110,24 +94,10 @@ Or include the source directly in your project.
 
 ## Dependencies
 
-- `org.scicloj/noj` - Comprehensive data science toolkit
-  - `tablecloth.api` - DataFrame operations
-  - `tech.v3.datatype` - High-performance array programming
-  - `java-time.api` - Modern date/time handling
+- `Tablecloth` (a `tech.ml.dataset` wrapper)
+- `java-time.api` - Modern date/time handling
 
-## Development
-
-### Running Tests
-```bash
-clj -M:test
-```
-
-### REPL Development
-```bash
-clj -M:nrepl
-```
-
-### Examples
+## Examples
 See `notebooks/windowed_dataset_examples.clj` for comprehensive usage examples and demonstrations.
 
 ## Architecture
@@ -138,13 +108,6 @@ The library uses a circular buffer approach where:
 2. **Position tracking** maintains insertion order and handles wraparound
 3. **Binary search** enables fast time-based queries
 4. **Tablecloth integration** provides familiar dataset operations
-
-## Contributing
-
-Contributions welcome! Please ensure:
-- Tests pass: `clj -M:test`
-- Code follows existing style conventions
-- New features include tests and documentation
 
 ## Related Projects
 
