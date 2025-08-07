@@ -2,7 +2,8 @@
   (:require [clojure.test :refer [deftest is testing]]
             [scicloj.windowed-dataset.api :as wd]
             [java-time.api :as java-time]
-            [tablecloth.api :as tc]))
+            [tablecloth.api :as tc]
+            [tablecloth.column.api :as tcc]))
 
 (deftest test-make-windowed-dataset
   (testing "Creating an empty windowed dataset"
@@ -350,3 +351,308 @@
       (is (= (vec (:float-col regular-ds)) [3.14 2.71]))
       (is (= (vec (:string-col regular-ds)) ["hello" "world"]))
       (is (= (vec (:bool-col regular-ds)) [true false])))))
+
+(deftest moving-average-test
+  (testing "Basic moving average calculation"
+    (let [;; Create windowed dataset with known values
+          wd (wd/make-windowed-dataset {:x :int32} 10)
+          test-values [800 810 820 830 840]
+          test-data (map (fn [v] {:x v}) test-values)
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Test different window sizes
+      (is (= 830 (wd/moving-average populated-wd 3 :x))) ; avg of [820 830 840]
+      (is (= 825 (wd/moving-average populated-wd 4 :x))) ; avg of [810 820 830 840]  
+      (is (= 820 (wd/moving-average populated-wd 5 :x))) ; avg of [800 810 820 830 840]
+
+      ;; Test insufficient data
+      (is (nil? (wd/moving-average populated-wd 6 :x))) ; only 5 samples available
+      (is (nil? (wd/moving-average populated-wd 10 :x))))) ; way more than available
+
+  (testing "Custom column name support"
+    (let [wd (wd/make-windowed-dataset {:HeartInterval :int32} 5)
+          test-data [{:HeartInterval 900} {:HeartInterval 950} {:HeartInterval 1000}]
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (= 950 (wd/moving-average populated-wd 3 :HeartInterval)))))
+
+  (testing "Empty dataset"
+    (let [empty-wd (wd/make-windowed-dataset {:x :int32} 5)]
+      (is (nil? (wd/moving-average empty-wd 1 :x)))
+      (is (nil? (wd/moving-average empty-wd 3 :x)))))
+
+  (testing "Single sample"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 5)
+          single-wd (wd/insert-to-windowed-dataset! wd {:x 800})]
+      (is (= 800 (wd/moving-average single-wd 1 :x)))
+      (is (nil? (wd/moving-average single-wd 2 :x)))))
+
+  (testing "Circular buffer behavior"
+    (let [;; Small buffer that will wrap around
+          wd (wd/make-windowed-dataset {:x :int32} 3)
+          ;; Insert more data than capacity
+          test-data (map (fn [v] {:x v}) [100 200 300 400 500])
+          final-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Should only have last 3 values: [300 400 500]
+      (is (= 400 (wd/moving-average final-wd 3 :x))) ; avg of [300 400 500]
+      (is (= 450 (wd/moving-average final-wd 2 :x))))) ; avg of [400 500]
+
+  (testing "Floating point precision"
+    (let [wd (wd/make-windowed-dataset {:x :float64} 5)
+          test-data [{:x 800.5} {:x 810.7} {:x 820.3}]
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Test precise calculation
+      (is (< (Math/abs (- 810.5 (wd/moving-average populated-wd 3 :x))) 0.01)))))
+
+(deftest median-filter-test
+  (testing "Basic median filter calculation"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 10)
+          ;; Test data with outlier: [800, 810, 1500, 820, 830]
+          test-data (map (fn [v] {:x v}) [800 810 1500 820 830])
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Test different window sizes
+      (is (= 830 (wd/median-filter populated-wd 3 :x))) ; median of [1500 820 830] = 820
+      (is (= 830 (wd/median-filter populated-wd 4 :x))) ; median of [810 1500 820 830] = 815 (avg of 810,820)
+      (is (= 820 (wd/median-filter populated-wd 5 :x))) ; median of [800 810 1500 820 830] = 820
+
+      ;; Test insufficient data
+      (is (nil? (wd/median-filter populated-wd 6 :x)))))
+
+  (testing "Odd vs even window sizes"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 10)
+          test-data (map (fn [v] {:x v}) [100 200 300 400 500])
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Odd window size - true median
+      (is (= 300 (wd/median-filter populated-wd 5 :x))) ; [100 200 300 400 500] -> 300
+      (is (= 400 (wd/median-filter populated-wd 3 :x))) ; [300 400 500] -> 400
+
+      ;; Even window size - lower middle element (by design)
+      (is (= 400 (wd/median-filter populated-wd 4 :x))) ; [200 300 400 500] -> 300 (index 1)
+      (is (= 500 (wd/median-filter populated-wd 2 :x))))) ; [400 500] -> 400 (index 0)
+
+  (testing "Custom column name"
+    (let [wd (wd/make-windowed-dataset {:CustomCol :int32} 5)
+          test-data [{:CustomCol 900} {:CustomCol 950} {:CustomCol 1000}]
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (= 950 (wd/median-filter populated-wd 3 :CustomCol))))))
+
+(deftest cascaded-median-filter-test
+  (testing "Basic cascaded median filter"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 10)
+          ;; Data with outliers that 3-point median should handle
+          test-data (map (fn [v] {:x v}) [800 1500 810 2000 820]) ; outliers at pos 1,3
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Should apply 3-point median first, then 5-point median
+      (is (number? (wd/cascaded-median-filter populated-wd :x)))
+      (is (not (nil? (wd/cascaded-median-filter populated-wd :x))))))
+
+  (testing "Insufficient data"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 10)
+          test-data (map (fn [v] {:x v}) [800 810 820]) ; only 3 samples
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (nil? (wd/cascaded-median-filter populated-wd :x))))) ; needs 5+ samples
+
+  (testing "Exact 5 samples"
+    (let [wd (wd/make-windowed-dataset {:x :int32} 10)
+          test-data (map (fn [v] {:x v}) [800 810 820 830 840])
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (number? (wd/cascaded-median-filter populated-wd :x)))))
+
+  (testing "Custom column name"
+    (let [wd (wd/make-windowed-dataset {:Interval :int32} 8)
+          test-data (map (fn [v] {:Interval v}) [700 710 720 730 740])
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (number? (wd/cascaded-median-filter populated-wd :Interval))))))
+
+(deftest exponential-moving-average-test
+  (testing "Basic EMA calculation"
+    (let [wd (wd/make-windowed-dataset {:x :float64} 10)
+          ;; Simple increasing sequence
+          test-data (map (fn [v] {:x (double v)}) [800 810 820])
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Test different alpha values
+      (let [ema-low (wd/exponential-moving-average populated-wd 0.1 :x)
+            ema-high (wd/exponential-moving-average populated-wd 0.9 :x)]
+        ;; Higher alpha should be closer to recent values
+        (is (> ema-high ema-low))
+        (is (number? ema-low))
+        (is (number? ema-high)))))
+
+  (testing "Single sample"
+    (let [wd (wd/make-windowed-dataset {:x :float64} 5)
+          single-wd (wd/insert-to-windowed-dataset! wd {:x 800.0})]
+
+      ;; EMA of single value should be that value
+      (is (= 800.0 (wd/exponential-moving-average single-wd 0.5 :x)))))
+
+  (testing "Empty dataset"
+    (let [empty-wd (wd/make-windowed-dataset {:x :float64} 5)]
+      (is (nil? (wd/exponential-moving-average empty-wd 0.3 :x)))))
+
+  (testing "Alpha edge cases"
+    (let [wd (wd/make-windowed-dataset {:x :float64} 5)
+          test-data [{:x 800.0} {:x 900.0}]
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      ;; Alpha = 1.0 should return the last value
+      (is (= 900.0 (wd/exponential-moving-average populated-wd 1.0 :x)))
+
+      ;; Alpha very small should be close to first value
+      (let [ema-tiny (wd/exponential-moving-average populated-wd 0.01 :x)]
+        (is (< (Math/abs (- 801.0 ema-tiny)) 1.0))))) ; Should be close to 800 + small adjustment
+
+  (testing "Custom column name"
+    (let [wd (wd/make-windowed-dataset {:Rate :float64} 5)
+          test-data [{:Rate 75.0} {:Rate 80.0}]
+          populated-wd (reduce wd/insert-to-windowed-dataset! wd test-data)]
+
+      (is (number? (wd/exponential-moving-average populated-wd 0.5 :Rate))))))
+
+(deftest cascaded-smoothing-filter-test
+  (testing "Basic functionality with sufficient data"
+    (let [;; Create windowed dataset with mixed noise and outliers
+          test-data (tc/dataset {:timestamp (range 15)
+                                 :x [800 810 1500 820 805 ; outlier at position 2
+                                     815 812 808 795 2000 ; outlier at position 9  
+                                     805 820 800 810 815]})
+
+          windowed-dataset (-> test-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 20))
+
+          ;; Insert all data
+          final-wd (reduce wd/insert-to-windowed-dataset!
+                           windowed-dataset
+                           (tc/rows test-data :as-maps))]
+
+      ;; Test with default parameters (5pt median, 3pt MA)
+      (let [result (wd/cascaded-smoothing-filter final-wd 5 3 :x)]
+        (is (number? result))
+        (is (> result 700))
+        (is (< result 900)))
+
+      ;; Test with custom parameters
+      (let [result (wd/cascaded-smoothing-filter final-wd 3 2 :x)]
+        (is (number? result))
+        (is (> result 700))
+        (is (< result 900)))
+
+      ;; Test with specific column
+      (let [result (wd/cascaded-smoothing-filter final-wd 5 3 :x)]
+        (is (number? result)))))
+
+  (testing "Insufficient data scenarios"
+    (let [small-data (tc/dataset {:timestamp (range 3)
+                                  :x [800 810 820]})
+
+          windowed-dataset (-> small-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 10))
+
+          ;; Insert insufficient data
+          partial-wd (reduce wd/insert-to-windowed-dataset!
+                             windowed-dataset
+                             (tc/rows small-data :as-maps))]
+
+      ;; Should return nil when insufficient data
+      (is (nil? (wd/cascaded-smoothing-filter partial-wd 5 3 :x)))
+      (is (nil? (wd/cascaded-smoothing-filter partial-wd 5 3 :x)))
+      (is (nil? (wd/cascaded-smoothing-filter partial-wd 10 5 :x)))))
+
+  (testing "Outlier removal effectiveness"
+    (let [;; Data with extreme outliers
+          outlier-data (tc/dataset {:timestamp (range 12)
+                                    :x [800 800 5000 800 800 ; extreme outlier
+                                        800 800 800 100 800 ; extreme outlier  
+                                        800 800]})
+
+          windowed-dataset (-> outlier-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 15))
+
+          final-wd (reduce wd/insert-to-windowed-dataset!
+                           windowed-dataset
+                           (tc/rows outlier-data :as-maps))
+
+          result (wd/cascaded-smoothing-filter final-wd 5 3 :x)]
+
+      ;; Result should be close to 800, not influenced by outliers
+      (is (number? result))
+      (is (> result 750))
+      (is (< result 850))
+      (is (< (abs (- result 800)) 50)))) ; Within 50ms of true value
+
+  (testing "Noise reduction effectiveness"
+    (let [;; Data with Gaussian noise but no outliers
+          noisy-data (tc/dataset {:timestamp (range 10)
+                                  :x [795 803 798 802 799 801 797 804 800 798]})
+
+          windowed-dataset (-> noisy-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 15))
+
+          final-wd (reduce wd/insert-to-windowed-dataset!
+                           windowed-dataset
+                           (tc/rows noisy-data :as-maps))
+
+          result (wd/cascaded-smoothing-filter final-wd 5 3 :x)]
+
+      ;; Should smooth the noise around 800
+      (is (number? result))
+      (is (> result 795))
+      (is (< result 805))))
+
+  (testing "Parameter sensitivity"
+    (let [test-data (tc/dataset {:timestamp (range 15)
+                                 :x [800 810 1200 820 805 815 812 808 795 805 820 800 810 815 800]})
+
+          windowed-dataset (-> test-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 20))
+
+          final-wd (reduce wd/insert-to-windowed-dataset!
+                           windowed-dataset
+                           (tc/rows test-data :as-maps))]
+
+      ;; Different window sizes should give different but reasonable results
+      (let [result-3-2 (wd/cascaded-smoothing-filter final-wd 3 2 :x)
+            result-5-3 (wd/cascaded-smoothing-filter final-wd 5 3 :x)
+            result-7-4 (wd/cascaded-smoothing-filter final-wd 7 4 :x)]
+
+        (is (every? number? [result-3-2 result-5-3 result-7-4]))
+        (is (every? #(and (> % 700) (< % 900)) [result-3-2 result-5-3 result-7-4]))
+
+        ;; Results should be similar but not identical
+        (is (< (abs (- result-3-2 result-5-3)) 100))
+        (is (< (abs (- result-5-3 result-7-4)) 100)))))
+
+  (testing "Edge cases and error handling"
+    (let [edge-data (tc/dataset {:timestamp (range 8)
+                                 :x [800 800 800 800 800 800 800 800]})
+
+          windowed-dataset (-> edge-data
+                               (update-vals tcc/typeof)
+                               (wd/make-windowed-dataset 10))
+
+          final-wd (reduce wd/insert-to-windowed-dataset!
+                           windowed-dataset
+                           (tc/rows edge-data :as-maps))]
+
+      ;; Perfect data should return the same value
+      (let [result (wd/cascaded-smoothing-filter final-wd 5 3 :x)]
+        (is (number? result))
+        (is (< (abs (- result 800.0)) 0.1))) ; Close to 800
+
+      ;; Zero window sizes should return nil
+      (is (nil? (wd/cascaded-smoothing-filter final-wd 0 3 :x)))
+      (is (nil? (wd/cascaded-smoothing-filter final-wd 3 0 :x))))))

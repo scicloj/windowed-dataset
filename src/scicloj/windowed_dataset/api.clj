@@ -251,3 +251,148 @@
                                           (windowed-fn new-windowed-dataset)]))
                                      [initial-windowed-dataset nil])
                                     (map second))))))
+
+;; ## Simple Smoothing Functions for Streaming Analysis
+
+(defn moving-average
+  "Calculate simple moving average of recent data in windowed dataset.
+  
+  **Args:**
+  
+  - `windowed-dataset` - a `WindowedDataset`
+  - `window-size` - number of recent samples to average
+  - `value-colname` - column name containing values to be processed
+  
+  **Returns:**
+  Moving average of the most recent window-size samples, or nil if insufficient data"
+  [windowed-dataset window-size value-colname]
+  (let [{:keys [current-size]} windowed-dataset]
+    (when (>= current-size window-size)
+      (let [recent-data (windowed-dataset->dataset windowed-dataset)
+            recent-values (-> recent-data
+                              (tc/tail window-size)
+                              (tc/column value-colname))]
+        (/ (reduce + recent-values) window-size)))))
+
+(defn median-filter
+  "Apply median filter to the most recent data in a windowed dataset.
+  
+  **Args:**
+  
+  - `windowed-dataset` - a `WindowedDataset` 
+  - `window-size` - number of recent samples to use for median calculation
+  - `value-colname` - column name containing values to be processed
+  
+  **Returns:**
+  Median value of the most recent window-size samples, or nil if insufficient data"
+  [windowed-dataset window-size value-colname]
+  (let [{:keys [current-size]} windowed-dataset]
+    (when (>= current-size window-size)
+      (let [recent-data (windowed-dataset->dataset windowed-dataset)
+            recent-values (-> recent-data
+                              (tc/tail window-size)
+                              (tc/column value-colname)
+                              vec
+                              sort)]
+        (nth recent-values (quot window-size 2))))))
+
+(defn cascaded-median-filter
+  "Apply cascaded median filters (3-point then 5-point) for robust smoothing.
+  
+  **Args:**
+  
+  - `windowed-dataset` - a `WindowedDataset`
+  - `value-colname` - column name containing values to be processed
+  
+  **Returns:**
+  Cascaded median filtered value, or nil if insufficient data (needs 5+ samples)"
+  [windowed-dataset value-colname]
+  (let [{:keys [current-size]} windowed-dataset]
+    (when (>= current-size 5)
+      ;; First apply 3-point median to recent 5 samples
+      (let [recent-data (windowed-dataset->dataset windowed-dataset)
+            recent-values (-> recent-data
+                              (tc/tail 5)
+                              (tc/column value-colname)
+                              vec)
+            ;; Apply 3-point median filter to each position
+            median-3-filtered (mapv (fn [i]
+                                      (if (and (>= i 1) (< i (- (count recent-values) 1)))
+                                        (let [window [(nth recent-values (- i 1))
+                                                      (nth recent-values i)
+                                                      (nth recent-values (+ i 1))]]
+                                          (nth (sort window) 1))
+                                        (nth recent-values i)))
+                                    (range (count recent-values)))
+            ;; Then take median of the 5-point filtered result
+            sorted-result (sort median-3-filtered)]
+        (nth sorted-result 2)))))
+
+(defn exponential-moving-average
+  "Calculate exponential moving average of recent data in windowed dataset.
+  
+  **Args:**
+  
+  - `windowed-dataset` - a `WindowedDataset`
+  - `alpha` - smoothing factor (0 < alpha <= 1, higher = more responsive)
+  - `value-colname` - column name containing values to be processed
+  
+  **Returns:**
+  EMA value, or nil if no data available"
+  [windowed-dataset alpha value-colname]
+  (when (and (> alpha 0) (<= alpha 1))
+    (let [{:keys [current-size]} windowed-dataset]
+      (when (> current-size 0)
+        (let [recent-data (windowed-dataset->dataset windowed-dataset)
+              values (tc/column recent-data value-colname)]
+          (when (seq values)
+            (reduce (fn [ema value]
+                      (+ (* alpha value) (* (- 1 alpha) ema)))
+                    (first values)
+                    (rest values))))))))
+
+(defn cascaded-smoothing-filter
+  "Apply cascaded smoothing: median filter followed by moving average.
+  
+  This combines the outlier-removal power of median filtering with the 
+  noise-reduction benefits of moving averages for comprehensive cleaning.
+  
+  **Args:**
+  
+  - `windowed-dataset` - a `WindowedDataset`
+  - `median-window` - window size for median filter
+  - `ma-window` - window size for moving average
+  - `value-colname` - column name containing values to be processed
+  
+  **Returns:**
+  Final smoothed value, or nil if insufficient data"
+  [windowed-dataset median-window ma-window value-colname]
+  (let [{:keys [current-size]} windowed-dataset]
+    (when (and (> median-window 0) (> ma-window 0)
+               (>= current-size (+ median-window ma-window)))
+      ;; Step 1: Apply median filter to remove outliers
+      (let [recent-data (windowed-dataset->dataset windowed-dataset)
+            recent-values (-> recent-data
+                              (tc/tail (+ median-window ma-window)) ; Need extra data for both stages
+                              (tc/column value-colname)
+                              vec)
+
+            ;; Apply median filter across the data
+            median-filtered (mapv (fn [i]
+                                    (if (and (>= i (quot median-window 2))
+                                             (< i (- (count recent-values) (quot median-window 2))))
+                                      (let [start (- i (quot median-window 2))
+                                            end (+ i (quot median-window 2) 1)
+                                            window (subvec recent-values start end)]
+                                        (nth (sort window) (quot median-window 2)))
+                                      (nth recent-values i)))
+                                  (range (count recent-values)))
+
+            ;; Step 2: Apply moving average to the median-filtered data for smoothing
+            final-values (-> median-filtered
+                             (subvec (- (count median-filtered) ma-window)))
+
+            moving-avg (double (/ (tcc/sum final-values) ma-window))]
+
+        moving-avg))))
+
