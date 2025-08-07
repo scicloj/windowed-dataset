@@ -4,18 +4,23 @@
   (:require [scicloj.windowed-dataset.api :as wd]
             [tablecloth.api :as tc]
             [java-time.api :as java-time]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [scicloj.kindly.v4.api :as kindly]
+            [scicloj.kindly.v4.kind :as kind]))
 
+^:kindly/hide-code
 (defn include-fnvar-as-section [fnvar]
-  (let [{:keys [name arglists doc]} (meta fnvar)]
-    (str (format "## `%s`\n\n" name)
-         (->> arglists
-              (map (fn [l]
-                     (->> l
-                          pr-str
-                          (format "`%s`\n\n"))))
-              (str/join ""))
-         doc)))
+  (-> (let [{:keys [name arglists doc]} (meta fnvar)]
+        (str (format "### `%s`\n\n" name)
+             (->> arglists
+                  (map (fn [l]
+                         (->> l
+                              pr-str
+                              (format "`%s`\n\n"))))
+                  (str/join ""))
+             doc))
+      kind/md
+      kindly/hide-code))
 
 ;; ## WindowedDataset Record
 
@@ -45,7 +50,7 @@
 ;; 3. Extract time windows with `windowed-dataset->time-window-dataset`
 ;; 4. Compute metrics over specific time periods
 
-;; ### WindowedDataset Structure Example
+;; #### WindowedDataset Structure Example
 
 (let [;; Create a windowed dataset to examine its structure
       windowed-ds (wd/make-windowed-dataset {:timestamp :instant :value :float64} 3)
@@ -77,7 +82,7 @@
 
 (include-fnvar-as-section #'wd/make-windowed-dataset)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create a windowed dataset for sensor data with 10-sample capacity
       column-spec {:timestamp :instant
@@ -93,7 +98,7 @@
 
 (include-fnvar-as-section #'wd/insert-to-windowed-dataset!)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create windowed dataset
       windowed-ds (wd/make-windowed-dataset {:timestamp :instant :temperature :float64 :sensor-id :string} 5)
@@ -116,7 +121,7 @@
 
 (include-fnvar-as-section #'wd/windowed-dataset-indices)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create and populate a small windowed dataset
       windowed-ds (wd/make-windowed-dataset {:value :int32} 4)
@@ -133,7 +138,7 @@
 
 (include-fnvar-as-section #'wd/windowed-dataset->dataset)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create windowed dataset with sample sensor data
       base-time (java-time/instant)
@@ -152,7 +157,7 @@
 
 (include-fnvar-as-section #'wd/binary-search-timestamp-start)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create sample timestamp data
       base-time (java-time/instant)
@@ -176,7 +181,7 @@
 
 (include-fnvar-as-section #'wd/windowed-dataset->time-window-dataset)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create realistic sensor scenario with timestamps
       base-time (java-time/instant)
@@ -207,7 +212,7 @@
 
 (include-fnvar-as-section #'wd/copy-windowed-dataset)
 
-;; ### Example
+;; #### Example
 
 (let [;; Create and populate a windowed dataset
       base-time (java-time/instant)
@@ -231,7 +236,7 @@
 
 (include-fnvar-as-section #'wd/add-column-by-windowed-fn)
 
-;; ### Examples
+;; #### Examples
 
 (let [time-series (tc/dataset {:timestamp [(java-time/instant)
                                            (java-time/plus (java-time/instant) (java-time/seconds 30))
@@ -256,43 +261,43 @@
 
 (include-fnvar-as-section #'wd/moving-average)
 
-;; ### Example
+;; #### Example
 
 (let [wd (wd/make-windowed-dataset {:x :int32} 10)
       data [{:x 800} {:x 850} {:x 820}]
       populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]
-  (double (wd/moving-average populated-wd 3)))
+  (wd/moving-average populated-wd 3 :x))
 
 (include-fnvar-as-section #'wd/median-filter)
 
-;; ### Example
+;; #### Example
 
 (let [wd (wd/make-windowed-dataset {:x :int32} 10)
       data [{:x 800} {:x 1200} {:x 820}] ; middle value is outlier
       populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]
-  (wd/median-filter populated-wd 3))
+  (wd/median-filter populated-wd 3 :x))
 
 (include-fnvar-as-section #'wd/cascaded-median-filter)
 
-;; ### Example
+;; #### Example
 
 (let [wd (wd/make-windowed-dataset {:x :int32} 10)
       data [{:x 800} {:x 1200} {:x 820} {:x 1100} {:x 810}]
       populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]
-  (wd/cascaded-median-filter populated-wd))
+  (wd/cascaded-median-filter populated-wd :x))
 
 (include-fnvar-as-section #'wd/exponential-moving-average)
 
-;; ### Example
+;; #### Example
 
 (let [wd (wd/make-windowed-dataset {:x :int32} 10)
       data [{:x 800} {:x 850} {:x 820}]
       populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]
-  (wd/exponential-moving-average populated-wd 0.3))
+  (wd/exponential-moving-average populated-wd 0.3 :x))
 
 (include-fnvar-as-section #'wd/cascaded-smoothing-filter)
 
-;; ### Example
+;; #### Example
 
 (let [wd (wd/make-windowed-dataset {:x :int32} 15)
       ;; Data with noise and outliers
@@ -302,24 +307,8 @@
       populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]
 
   ;; Compare cascaded smoothing with individual methods
-  {:median-only (wd/median-filter populated-wd 5)
-   :moving-avg-only (wd/moving-average populated-wd 5)
-   :cascaded-5-3 (wd/cascaded-smoothing-filter populated-wd 5 3)
-   :cascaded-default (wd/cascaded-smoothing-filter populated-wd)})
+  {:median-only (wd/median-filter populated-wd 5 :x)
+   :moving-avg-only (wd/moving-average populated-wd 5 :x)
+   :cascaded-5-3 (wd/cascaded-smoothing-filter populated-wd 5 3 :x)})
 
-(include-fnvar-as-section #'ppi/cascaded-smoothing-filter)
 
-;; ### Example
-
-(let [wd (ppi/make-windowed-dataset {:x :int32} 15)
-      ;; Data with noise and outliers
-      data [{:x 800} {:x 820} {:x 1500} {:x 810}
-            {:x 805} {:x 815} {:x 2000} {:x 812}
-            {:x 808} {:x 795}]
-      populated-wd (reduce ppi/insert-to-windowed-dataset! wd data)]
-
-  ;; Compare cascaded smoothing with individual methods
-  {:median-only (ppi/median-filter populated-wd 5)
-   :moving-avg-only (ppi/moving-average populated-wd 5)
-   :cascaded-5-3 (ppi/cascaded-smoothing-filter populated-wd 5 3)
-   :cascaded-default (ppi/cascaded-smoothing-filter populated-wd)})
