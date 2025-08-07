@@ -98,24 +98,6 @@ Or include the source directly in your project.
 - `Tablecloth` (a `tech.ml.dataset` wrapper)
 - `java-time.api` - Modern date/time handling
 
-## Examples
-See `notebooks/windowed_dataset_examples.clj` for comprehensive usage examples and demonstrations.
-
-## Architecture
-
-The library uses a circular buffer approach where:
-
-1. **Fixed-size arrays** store columnar data efficiently
-2. **Position tracking** maintains insertion order and handles wraparound
-3. **Binary search** enables fast time-based queries
-4. **Tablecloth integration** provides familiar dataset operations
-
-## Related Projects
-
-- [tablecloth](https://github.com/scicloj/tablecloth) - Dataset manipulation
-- [tech.v3.datatype](https://github.com/cnuernber/dtype-next) - High-performance arrays
-- [noj](https://github.com/scicloj/noj) - Data science ecosystem
-
 ## License
 
 Copyright © 2025 Scicloj
