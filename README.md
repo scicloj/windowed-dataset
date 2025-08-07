@@ -1,0 +1,157 @@
+# Windowed Dataset
+
+A general-purpose Clojure library for efficient windowed dataset operations on streaming time-series data.
+
+## Overview
+
+The Windowed Dataset library provides a circular buffer-based dataset implementation that maintains a fixed-size window of the most recent data. This enables efficient streaming data analysis and time-series processing with bounded memory usage, making it ideal for real-time analytics, IoT applications, and scientific computing.
+
+## Key Features
+
+- **Constant Memory Usage**: Fixed-size circular buffer regardless of input stream size
+- **Efficient Time Windows**: O(log n) binary search for time-based data filtering  
+- **Streaming-Friendly**: Designed for real-time data processing workflows
+- **Tablecloth Integration**: Seamless conversion to/from regular datasets
+- **High Performance**: Built on tech.v3.datatype for efficient numeric operations
+- **Type-Aware**: Support for different column data types (numeric, temporal, string)
+
+## Installation
+
+Add to your `deps.edn`:
+
+```clojure
+{:deps {windowed-dataset {:local/root "path/to/windowed-dataset"}}}
+```
+
+Or include the source directly in your project.
+
+## Quick Start
+
+```clojure
+(require '[windowed-dataset.core :as wd]
+         '[java-time.api :as java-time])
+
+;; Define column types for your data
+(def column-types {:timestamp :instant :value :float64 :sensor-id :string})
+
+;; Create a windowed dataset with maximum size of 100 records
+(def windowed-ds (wd/make-windowed-dataset column-types 100))
+
+;; Insert streaming data
+(def updated-ds 
+  (wd/insert-to-windowed-dataset! 
+    windowed-ds 
+    {:timestamp (java-time/instant)
+     :value 42.5
+     :sensor-id "sensor-1"}))
+
+;; Convert to regular dataset for analysis
+(def regular-ds (wd/windowed-dataset->dataset updated-ds))
+
+;; Extract data from a specific time window (last 5 seconds)
+(def recent-data 
+  (wd/windowed-dataset->time-window-dataset updated-ds :timestamp 5000))
+```
+
+## Core API
+
+### Creating Windowed Datasets
+
+- `make-windowed-dataset [column-types max-size]` - Create an empty windowed dataset
+- `copy-windowed-dataset [windowed-dataset]` - Create a deep copy
+
+### Data Operations
+
+- `insert-to-windowed-dataset! [windowed-dataset row]` - Insert new data row
+- `windowed-dataset->dataset [windowed-dataset]` - Convert to regular dataset
+- `windowed-dataset->time-window-dataset [windowed-dataset timestamp-col time-window]` - Extract time window
+
+### Advanced Operations
+
+- `add-column-by-windowed-fn [time-series options]` - Add progressive analysis columns
+- `windowed-dataset-indices [windowed-dataset]` - Get data indices in insertion order
+
+## Use Cases
+
+### Real-time Analytics
+```clojure
+;; Calculate moving averages on streaming data
+(defn moving-average [windowed-ds]
+  (let [data (wd/windowed-dataset->dataset windowed-ds)
+        values (:value data)]
+    (when (seq values)
+      (/ (reduce + values) (count values)))))
+```
+
+### Time Series Feature Engineering
+```clojure
+;; Add progressive features to historical data
+(wd/add-column-by-windowed-fn 
+  time-series-data
+  {:colname :rolling-mean
+   :windowed-fn moving-average
+   :windowed-dataset-size 50})
+```
+
+### IoT Sensor Processing
+```clojure
+;; Process sensor data with fixed memory footprint
+(reduce wd/insert-to-windowed-dataset! 
+        sensor-windowed-ds 
+        incoming-sensor-stream)
+```
+
+## Performance Characteristics
+
+- **Memory**: O(window-size) regardless of total data processed
+- **Insertion**: O(1) amortized time complexity
+- **Time Window Queries**: O(log n) using binary search
+- **Conversion to Dataset**: O(window-size)
+
+## Dependencies
+
+- `org.scicloj/noj` - Comprehensive data science toolkit
+  - `tablecloth.api` - DataFrame operations
+  - `tech.v3.datatype` - High-performance array programming
+  - `java-time.api` - Modern date/time handling
+
+## Development
+
+### Running Tests
+```bash
+clj -M:test
+```
+
+### REPL Development
+```bash
+clj -M:nrepl
+```
+
+### Examples
+See `notebooks/windowed_dataset_examples.clj` for comprehensive usage examples and demonstrations.
+
+## Architecture
+
+The library uses a circular buffer approach where:
+
+1. **Fixed-size arrays** store columnar data efficiently
+2. **Position tracking** maintains insertion order and handles wraparound
+3. **Binary search** enables fast time-based queries
+4. **Tablecloth integration** provides familiar dataset operations
+
+## Contributing
+
+Contributions welcome! Please ensure:
+- Tests pass: `clj -M:test`
+- Code follows existing style conventions
+- New features include tests and documentation
+
+## License
+
+[Your license here]
+
+## Related Projects
+
+- [tablecloth](https://github.com/scicloj/tablecloth) - Dataset manipulation
+- [tech.v3.datatype](https://github.com/cnuernber/dtype-next) - High-performance arrays
+- [noj](https://github.com/scicloj/noj) - Data science ecosystem
