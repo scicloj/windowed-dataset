@@ -106,6 +106,7 @@ Process continuous data streams with bounded memory:
 ## When to Use This
 
 **Great for:**
+
 - Real-time dashboards and monitoring
 - Streaming analytics and alerts  
 - IoT sensor data processing
@@ -113,6 +114,7 @@ Process continuous data streams with bounded memory:
 - Online feature engineering for ML models
 
 **Not ideal for:**
+
 - Small datasets that fit in memory
 - Analyses requiring access to full historical data
 - Applications needing data persistence across restarts

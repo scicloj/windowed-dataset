@@ -71,6 +71,7 @@ temperature-buffer
 (tc/dataset (show-window-evolution))
 
 ;; Notice how:
+
 ;; - The buffer grows until it reaches maximum size (5)
 ;; - After that, old data is automatically discarded to make room for new data
 ;; - Memory usage stays constant regardless of how much data we process
