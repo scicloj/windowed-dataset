@@ -1,0 +1,5 @@
+{:remote-repo {:git-url "https://github.com/scicloj/windowed-dataset"
+               :branch  "main"}
+ :quarto      {:format {:html {:theme [:cosmo "notebooks/custom.scss"]
+                               :number-sections false}}}
+ :base-target-path ".clay-temp"}
