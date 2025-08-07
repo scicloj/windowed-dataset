@@ -1,3 +1,5 @@
 .nrepl-port
 .cpcache
 .clay-temp
+.cloure-mcp
+.dir-locals.el
