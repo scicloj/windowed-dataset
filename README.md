@@ -11,6 +11,16 @@ Working with streaming data often means dealing with two competing needs: analyz
 
 Think of it as a sliding window over your data stream - you always see the most recent activity while using constant memory, regardless of how much data flows through your system.
 
+## How It Works
+
+Under the hood, windowed datasets use a **circular buffer**. Imagine an array with a pointer that moves in a circle: when new data arrives, it overwrites the oldest data and moves the pointer forward. When the pointer reaches the end, it wraps back to the beginning.
+
+This simple technique provides powerful benefits:
+- **Constant memory**: The buffer never grows beyond your specified size
+- **Fast insertion**: Adding new data is always O(1) - just overwrite and increment
+- **Automatic cleanup**: No need to manually delete old data - it's automatically replaced
+- **Cache-friendly**: Data stays in contiguous memory for better performance
+
 ## Status
 Alpha stage - API may change
 
