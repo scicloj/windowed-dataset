@@ -1,0 +1,29 @@
+@import url(https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css);
+
+/*-- scss:rules --*/
+.table {width:auto}
+
+code {font-family: 'Fira Code Medium', monospace;}
+
+.clay-image img {max-width: 100%}
+
+.table {
+    @extend .table-striped;
+    @extend .table-hover;
+    @extend .table-responsive;
+}
+
+.clay-dataset {
+  max-height:500px; 
+  overflow-y: auto;
+}
+
+.printedClojure {
+  max-height:500px;
+  overflow-y: auto;
+}
+
+.limited-height {
+  max-height:500px;
+  overflow-y: auto;
+}

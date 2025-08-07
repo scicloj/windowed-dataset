@@ -1,0 +1,222 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Windowed dataset",
+    "section": "",
+    "text": "Status\nA general-purpose Clojure library for efficient windowed dataset operations on streaming time-series data.\nalpha stage, might move elsewhere",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#overview",
+    "href": "index.html#overview",
+    "title": "Windowed dataset",
+    "section": "Overview",
+    "text": "Overview\nThe Windowed Dataset library provides a circular buffer-based dataset implementation that maintains a fixed-size window of the most recent data. This enables efficient streaming data analysis and time-series processing with bounded memory usage, making it ideal for real-time analytics, IoT applications, and scientific computing.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#key-features",
+    "href": "index.html#key-features",
+    "title": "Windowed dataset",
+    "section": "Key Features",
+    "text": "Key Features\n\nCaution: Mutable - Use with care\nConstant Memory Usage - Fixed-size circular buffer regardless of input stream size\nEfficient Time Windows - O(log n) binary search for time-based data filtering\n\nStreaming-Friendly - Designed for real-time data processing workflows\nTablecloth Integration - Seamless conversion to/from regular datasets\nHigh Performance - Built on tech.v3.datatype for efficient numeric operations\nType-Aware - Support for different column data types (numeric, temporal, string)",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "Windowed dataset",
+    "section": "Installation",
+    "text": "Installation\nAdd to your deps.edn:\n{:deps {windowed-dataset {:local/root \"path/to/windowed-dataset\"}}}\nOr include the source directly in your project.",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#quick-start",
+    "href": "index.html#quick-start",
+    "title": "Windowed dataset",
+    "section": "Quick Start",
+    "text": "Quick Start\n(require '[scicloj.windowed-dataset.api :as wd]\n         '[java-time.api :as java-time])\n\n;; Define column types for your data\n(def column-types {:timestamp :instant :value :float64 :sensor-id :string})\n\n;; Create a windowed dataset with maximum size of 100 records\n(def windowed-ds (wd/make-windowed-dataset column-types 100))\n\n;; Insert streaming data\n(def updated-ds \n  (wd/insert-to-windowed-dataset! \n    windowed-ds \n    {:timestamp (java-time/instant)\n     :value 42.5\n     :sensor-id \"sensor-1\"}))\n\n;; Convert to regular dataset for analysis\n(def regular-ds (wd/windowed-dataset-&gt;dataset updated-ds))\n\n;; Extract data from a specific time window (last 5 seconds)\n(def recent-data \n  (wd/windowed-dataset-&gt;time-window-dataset updated-ds :timestamp 5000))",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#use-cases",
+    "href": "index.html#use-cases",
+    "title": "Windowed dataset",
+    "section": "Use Cases",
+    "text": "Use Cases\n\nReal-time Analytics\n;; Calculate moving averages on streaming data\n(defn moving-average [windowed-ds]\n  (let [data (wd/windowed-dataset-&gt;dataset windowed-ds)\n        values (:value data)]\n    (when (seq values)\n      (/ (reduce + values) (count values)))))\n\n\nTime Series Feature Engineering\n;; Add progressive features to historical data\n(wd/add-column-by-windowed-fn \n  time-series-data\n  {:colname :rolling-mean\n   :windowed-fn moving-average\n   :windowed-dataset-size 50})\n\n\nIoT Sensor Processing\n;; Process sensor data with fixed memory footprint\n(reduce wd/insert-to-windowed-dataset! \n        sensor-windowed-ds \n        incoming-sensor-stream)",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#performance-characteristics",
+    "href": "index.html#performance-characteristics",
+    "title": "Windowed dataset",
+    "section": "Performance Characteristics",
+    "text": "Performance Characteristics\n\nMemory - O(window-size) regardless of total data processed\nInsertion - O(1) amortized time complexity\nTime Window Queries - O(log n) using binary search\nConversion to Dataset - zero copy (a dataset is a view)",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#dependencies",
+    "href": "index.html#dependencies",
+    "title": "Windowed dataset",
+    "section": "Dependencies",
+    "text": "Dependencies\n\nTablecloth (a tech.ml.dataset wrapper)\njava-time.api - Modern date/time handling",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "index.html#license",
+    "href": "index.html#license",
+    "title": "Windowed dataset",
+    "section": "License",
+    "text": "License\nCopyright © 2025 Scicloj\nEPLv1.0 is just the default for projects generated by clj-new: you are not required to open source this project, nor are you required to use EPLv1.0! Feel free to remove or change the LICENSE file and remove or update this section of the README.md file!\nDistributed under the Eclipse Public License version 1.0.\n\nsource: notebooks/index.clj",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Status</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html",
+    "href": "windowed_dataset_examples.html",
+    "title": "Windowed Dataset Examples",
+    "section": "",
+    "text": "Basic Usage\nThis notebook demonstrates the core functionality of windowed datasets for streaming data analysis and time-series processing.\nCreate a simple windowed dataset with timestamp and value columns\nCreate a windowed dataset with maximum size of 5 records\nInitial windowed dataset:",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#basic-usage",
+    "href": "windowed_dataset_examples.html#basic-usage",
+    "title": "Windowed Dataset Examples",
+    "section": "",
+    "text": "(def sample-column-types\n  {:timestamp :instant\n   :value :float64\n   :sensor-id :string})\n\n\n\n(def windowed-ds\n  (wd/make-windowed-dataset sample-column-types 5))\n\n\n\nwindowed-ds\n\n{\n\n\n\n\n\n\n\n\n:dataset\n\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:value\n:sensor-id\n\n\n\n\n\n0.0\n\n\n\n\n0.0\n\n\n\n\n0.0\n\n\n\n\n0.0\n\n\n\n\n0.0\n\n\n\n\n\n\n\n\n\n:column-types {:timestamp :instant, :value :float64, :sensor-id :string}:max-size 5:current-size 0:current-position 0}",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#inserting-data",
+    "href": "windowed_dataset_examples.html#inserting-data",
+    "title": "Windowed Dataset Examples",
+    "section": "Inserting Data",
+    "text": "Inserting Data\nLet’s create some sample time-series data\n\n(def sample-data\n  (let [start-time (java-time/instant)]\n    (map (fn [i]\n           {:timestamp (java-time/plus start-time (java-time/seconds i))\n            :value (+ 10.0 (* 2.0 (Math/sin (/ i 2.0))))\n            :sensor-id \"sensor-1\"})\n         (range 10))))\n\nSample time-series data (first 5 rows):\n\n(tc/dataset (take 5 sample-data))\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:value\n:sensor-id\n\n\n\n\n2025-08-07T22:50:54.238091Z\n10.00000000\nsensor-1\n\n\n2025-08-07T22:50:55.238091Z\n10.95885108\nsensor-1\n\n\n2025-08-07T22:50:56.238091Z\n11.68294197\nsensor-1\n\n\n2025-08-07T22:50:57.238091Z\n11.99498997\nsensor-1\n\n\n2025-08-07T22:50:58.238091Z\n11.81859485\nsensor-1\n\n\n\n\nInsert data progressively and observe the windowed dataset behavior\n\n(defn demonstrate-progressive-insertion []\n  (reduce (fn [acc-ds row]\n            (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)\n                  regular-ds (wd/windowed-dataset-&gt;dataset updated-ds)]\n              (println (str \"After inserting row with value \" (:value row) \":\"))\n              (println (str \"  Window size: \" (:current-size updated-ds)))\n              (println (str \"  Current position: \" (:current-position updated-ds)))\n              (println (str \"  Data in window: \" (vec (:value regular-ds))))\n              (println)\n              updated-ds))\n          windowed-ds\n          (take 8 sample-data)))\n\nProgressive insertion demonstration:\n\n(kind/code\n (with-out-str (demonstrate-progressive-insertion)))\n\n\nAfter inserting row with value 10.0:\n  Window size: 1\n  Current position: 1\n  Data in window: [10.0]\n\nAfter inserting row with value 10.958851077208406:\n  Window size: 2\n  Current position: 2\n  Data in window: [10.0 10.958851077208406]\n\nAfter inserting row with value 11.682941969615793:\n  Window size: 3\n  Current position: 3\n  Data in window: [10.0 10.958851077208406 11.682941969615793]\n\nAfter inserting row with value 11.994989973208108:\n  Window size: 4\n  Current position: 4\n  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108]\n\nAfter inserting row with value 11.818594853651364:\n  Window size: 5\n  Current position: 0\n  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364]\n\nAfter inserting row with value 11.196944288207913:\n  Window size: 5\n  Current position: 1\n  Data in window: [10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913]\n\nAfter inserting row with value 10.282240016119735:\n  Window size: 5\n  Current position: 2\n  Data in window: [11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735]\n\nAfter inserting row with value 9.29843354462076:\n  Window size: 5\n  Current position: 3\n  Data in window: [11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735 9.29843354462076]",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#time-window-functionality",
+    "href": "windowed_dataset_examples.html#time-window-functionality",
+    "title": "Windowed Dataset Examples",
+    "section": "Time Window Functionality",
+    "text": "Time Window Functionality\nCreate a windowed dataset with more data for time window examples\n\n(def full-windowed-ds\n  (reduce wd/insert-to-windowed-dataset! windowed-ds sample-data))\n\nFull windowed dataset converted to regular dataset:\n\n(wd/windowed-dataset-&gt;dataset full-windowed-ds)\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:value\n:sensor-id\n\n\n\n\n2025-08-07T22:50:59.238091095Z\n11.19694429\nsensor-1\n\n\n2025-08-07T22:51:00.238091095Z\n10.28224002\nsensor-1\n\n\n2025-08-07T22:51:01.238091095Z\n9.29843354\nsensor-1\n\n\n2025-08-07T22:51:02.238091095Z\n8.48639501\nsensor-1\n\n\n2025-08-07T22:51:03.238091095Z\n8.04493976\nsensor-1\n\n\n\n\nDemonstrate time window extraction\n\n(let [regular-ds (wd/windowed-dataset-&gt;dataset full-windowed-ds)\n      latest-time (last (:timestamp regular-ds))]\n  ;; **Time window examples:**\n  {:last-3-seconds (wd/windowed-dataset-&gt;time-window-dataset full-windowed-ds :timestamp 3000)\n   :last-5-seconds (wd/windowed-dataset-&gt;time-window-dataset full-windowed-ds :timestamp 5000)\n   :latest-timestamp latest-time})\n\n{\n\n\n\n\n\n\n\n\n:last-3-seconds\n\n\n\n_unnamed [4 3]:\n\n\n\n:timestamp\n:value\n:sensor-id\n\n\n\n\n2025-08-07T22:51:00.238091095Z\n10.28224002\nsensor-1\n\n\n2025-08-07T22:51:01.238091095Z\n9.29843354\nsensor-1\n\n\n2025-08-07T22:51:02.238091095Z\n8.48639501\nsensor-1\n\n\n2025-08-07T22:51:03.238091095Z\n8.04493976\nsensor-1\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n:last-5-seconds\n\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:value\n:sensor-id\n\n\n\n\n2025-08-07T22:50:59.238091095Z\n11.19694429\nsensor-1\n\n\n2025-08-07T22:51:00.238091095Z\n10.28224002\nsensor-1\n\n\n2025-08-07T22:51:01.238091095Z\n9.29843354\nsensor-1\n\n\n2025-08-07T22:51:02.238091095Z\n8.48639501\nsensor-1\n\n\n2025-08-07T22:51:03.238091095Z\n8.04493976\nsensor-1\n\n\n\n\n\n\n\n\n:latest-timestamp #inst \"2025-08-07T22:51:03.238091095-00:00\"}",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#real-time-streaming-simulation",
+    "href": "windowed_dataset_examples.html#real-time-streaming-simulation",
+    "title": "Windowed Dataset Examples",
+    "section": "Real-time Streaming Simulation",
+    "text": "Real-time Streaming Simulation\nDemonstrate how windowed datasets can be used for streaming analysis\n\n(defn calculate-moving-average [windowed-ds]\n  \"Calculate moving average from a windowed dataset\"\n  (let [regular-ds (wd/windowed-dataset-&gt;dataset windowed-ds)\n        values (:value regular-ds)]\n    (when (seq values)\n      (dfn/mean values))))\n\nSimulate streaming analysis with moving averages\n\n(defn streaming-analysis-demo []\n  (let [results (atom [])]\n    (reduce (fn [acc-ds row]\n              (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)\n                    moving-avg (calculate-moving-average updated-ds)]\n                (swap! results conj {:timestamp (:timestamp row)\n                                     :value (:value row)\n                                     :moving-average moving-avg})\n                updated-ds))\n            windowed-ds\n            sample-data)\n    @results))\n\nStreaming analysis with moving averages:\n\n(tc/dataset (streaming-analysis-demo))\n\n\n_unnamed [10 3]:\n\n\n\n:timestamp\n:value\n:moving-average\n\n\n\n\n2025-08-07T22:50:54.238091Z\n10.00000000\n10.00000000\n\n\n2025-08-07T22:50:55.238091Z\n10.95885108\n10.47942554\n\n\n2025-08-07T22:50:56.238091Z\n11.68294197\n10.88059768\n\n\n2025-08-07T22:50:57.238091Z\n11.99498997\n11.15919576\n\n\n2025-08-07T22:50:58.238091Z\n11.81859485\n11.29107557\n\n\n2025-08-07T22:50:59.238091Z\n11.19694429\n11.53046443\n\n\n2025-08-07T22:51:00.238091Z\n10.28224002\n11.39514222\n\n\n2025-08-07T22:51:01.238091Z\n9.29843354\n10.91824054\n\n\n2025-08-07T22:51:02.238091Z\n8.48639501\n10.21652154\n\n\n2025-08-07T22:51:03.238091Z\n8.04493976\n9.46179052",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#advanced-example-progressive-column-addition",
+    "href": "windowed_dataset_examples.html#advanced-example-progressive-column-addition",
+    "title": "Windowed Dataset Examples",
+    "section": "Advanced Example: Progressive Column Addition",
+    "text": "Advanced Example: Progressive Column Addition\nDemonstrate add-column-by-windowed-fn for batch processing\n\n(def time-series-data\n  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant) (java-time/seconds %)) (range 10))\n               :value (map #(+ 5.0 (* 3.0 (Math/sin (/ % 1.5)))) (range 10))\n               :noise (repeatedly 10 #(* 0.5 (- (rand) 0.5)))}))\n\nOriginal time series:\n\ntime-series-data\n\n\n_unnamed [10 3]:\n\n\n\n:timestamp\n:value\n:noise\n\n\n\n\n2025-08-07T22:50:54.271095Z\n5.00000000\n0.17921910\n\n\n2025-08-07T22:50:55.271149Z\n6.85510941\n0.11550950\n\n\n2025-08-07T22:50:56.271154Z\n7.91581370\n0.18040711\n\n\n2025-08-07T22:50:57.271156Z\n7.72789228\n-0.20914995\n\n\n2025-08-07T22:50:58.271158Z\n6.37181788\n-0.02834836\n\n\n2025-08-07T22:50:59.271160Z\n4.42829611\n0.08674079\n\n\n2025-08-07T22:51:00.271162Z\n2.72959251\n0.17570259\n\n\n2025-08-07T22:51:01.271164Z\n2.00313525\n0.11306764\n\n\n2025-08-07T22:51:02.271166Z\n2.56001183\n0.05813438\n\n\n2025-08-07T22:51:03.271169Z\n4.16175351\n-0.14664493\n\n\n\n\nAdd progressive moving average column\n\n(def windowed-moving-avg-fn\n  (fn [windowed-ds]\n    (calculate-moving-average windowed-ds)))\n\nTime series with progressive moving average:\n\n(wd/add-column-by-windowed-fn\n time-series-data\n {:colname :progressive-moving-avg\n  :windowed-fn windowed-moving-avg-fn\n  :windowed-dataset-size 120})\n\n\n_unnamed [10 4]:\n\n\n\n\n\n\n\n\n\n:timestamp\n:value\n:noise\n:progressive-moving-avg\n\n\n\n\n2025-08-07T22:50:54.271095Z\n5.00000000\n0.17921910\n\n\n\n2025-08-07T22:50:55.271149Z\n6.85510941\n0.11550950\n5.00000000\n\n\n2025-08-07T22:50:56.271154Z\n7.91581370\n0.18040711\n5.92755470\n\n\n2025-08-07T22:50:57.271156Z\n7.72789228\n-0.20914995\n6.59030770\n\n\n2025-08-07T22:50:58.271158Z\n6.37181788\n-0.02834836\n6.87470385\n\n\n2025-08-07T22:50:59.271160Z\n4.42829611\n0.08674079\n6.77412665\n\n\n2025-08-07T22:51:00.271162Z\n2.72959251\n0.17570259\n6.38315490\n\n\n2025-08-07T22:51:01.271164Z\n2.00313525\n0.11306764\n5.86121741\n\n\n2025-08-07T22:51:02.271166Z\n2.56001183\n0.05813438\n5.37895714\n\n\n2025-08-07T22:51:03.271169Z\n4.16175351\n-0.14664493\n5.06574100",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#performance-characteristics",
+    "href": "windowed_dataset_examples.html#performance-characteristics",
+    "title": "Windowed Dataset Examples",
+    "section": "Performance Characteristics",
+    "text": "Performance Characteristics\nDemonstrate that windowed datasets maintain constant memory usage\n\n(defn memory-usage-demo []\n  (let [large-dataset (map (fn [i]\n                             {:timestamp (java-time/plus (java-time/instant) (java-time/millis i))\n                              :value (rand)\n                              :sensor-id \"perf-test\"})\n                           (range 1000))\n        windowed-ds-small (wd/make-windowed-dataset sample-column-types 10)\n        windowed-ds-large (wd/make-windowed-dataset sample-column-types 100)]\n\n    {:small-window {:max-size 10\n                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-small large-dataset))}\n     :large-window {:max-size 100\n                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-large large-dataset))}\n     :input-data-size (count large-dataset)}))\n\nMemory usage demonstration:\n\n(memory-usage-demo)\n\n\n{:small-window {:max-size 10, :final-size 10},\n :large-window {:max-size 100, :final-size 100},\n :input-data-size 1000}",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#summary",
+    "href": "windowed_dataset_examples.html#summary",
+    "title": "Windowed Dataset Examples",
+    "section": "Summary",
+    "text": "Summary",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#key-benefits-of-windowed-datasets",
+    "href": "windowed_dataset_examples.html#key-benefits-of-windowed-datasets",
+    "title": "Windowed Dataset Examples",
+    "section": "Key Benefits of Windowed Datasets",
+    "text": "Key Benefits of Windowed Datasets\n\nConstant Memory Usage: Fixed-size circular buffer regardless of input stream size\nEfficient Time Windows: O(log n) binary search for time-based filtering\n\nStreaming-Friendly: Designed for real-time data processing\nTablecloth Integration: Seamless conversion to/from regular datasets\nHigh Performance: Built on tech.ml.dataset for efficient numeric operations",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset_examples.html#common-use-cases",
+    "href": "windowed_dataset_examples.html#common-use-cases",
+    "title": "Windowed Dataset Examples",
+    "section": "Common Use Cases",
+    "text": "Common Use Cases\n\nReal-time Analytics: Moving averages, trend detection, anomaly detection\nStreaming ML: Feature engineering for time-series models\nSensor Data Processing: IoT and monitoring applications\nFinancial Data: Technical indicators and risk metrics\nScientific Computing: Signal processing and time-series analysis\n\n\nsource: notebooks/windowed_dataset_examples.clj",
+    "crumbs": [
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>Windowed Dataset Examples</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset.api_reference.html",
+    "href": "windowed_dataset.api_reference.html",
+    "title": "API Reference",
+    "section": "",
+    "text": "WindowedDataset Record\nThe WindowedDataset record implements a circular buffer data structure optimized for time-series analysis:\nKey Characteristics:\nUsage Pattern:",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>API Reference</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset.api_reference.html#windoweddataset-record",
+    "href": "windowed_dataset.api_reference.html#windoweddataset-record",
+    "title": "API Reference",
+    "section": "",
+    "text": "(defrecord WindowedDataset\n          [dataset           ; tech.v3.dataset containing the actual data\n           column-types      ; map of column names to data types\n           max-size         ; maximum number of rows the buffer can hold\n           current-size     ; current number of rows (0 to max-size)\n           current-position ; current write position (circular index)])\n\n\nMutable - Use with caution\nFixed Memory - Pre-allocates arrays for maximum performance\nCircular Buffer - New data overwrites oldest when buffer is full\nChronological Access - Functions provide data in insertion order\nZero-Copy Views - Time windows are extracted without data copying\n\n\n\nCreate with make-windowed-dataset specifying column types and buffer size\nInsert streaming data with insert-to-windowed-dataset! (❗Caution: mutating the internal dataset.)\nExtract time windows with windowed-dataset-&gt;time-window-dataset\nCompute metrics over specific time periods\n\n\nWindowedDataset Structure Example\n\n(let [;; Create a windowed dataset to examine its structure\n      windowed-ds (wd/make-windowed-dataset {:timestamp :instant :value :float64} 3)\n      base-time (java-time/instant)\n\n      ;; Add one data point to see the structure\n      wd-with-data (wd/insert-to-windowed-dataset! windowed-ds {:timestamp base-time :value 42.5})]\n\n  ;; **WindowedDataset Record Fields:**\n  {:dataset \"tech.v3.dataset (Internal data storage)\"\n   :column-types (:column-types wd-with-data)\n   :max-size (:max-size wd-with-data)\n   :current-size (:current-size wd-with-data)\n   :current-position (:current-position wd-with-data)})\n\n\n{:dataset \"tech.v3.dataset (Internal data storage)\",\n :column-types {:timestamp :instant, :value :float64},\n :max-size 3,\n :current-size 1,\n :current-position 1}\n\n\n\nCircular Buffer Behavior\n\n(let [;; Demonstrate circular buffer behavior\n      small-wd (wd/make-windowed-dataset {:value :int32} 3)\n\n      ;; Fill beyond capacity to show circular behavior\n      test-data (map (fn [i] {:value i}) (range 5))\n      final-wd (reduce wd/insert-to-windowed-dataset! small-wd test-data)]\n\n  ;; **Circular Buffer Example (capacity: 3, inserted: 5 values):**\n  ;; Final state: size=3, position=2 (values 0,1 were overwritten by 3,4)\n  ;; **Data in chronological order:**\n  (wd/windowed-dataset-&gt;dataset final-wd))\n\n\n_unnamed [3 1]:\n\n\n\n:value\n\n\n\n\n2\n\n\n3\n\n\n4\n\n\n\n\n\n\nmake-windowed-dataset\n[column-types max-size]\nCreate an empty WindowedDataset with a given max-size and given column-types (map).\nArgs:\n\ncolumn-types - a map from column name to type\nmax-size - maximal window size to keep\n\nReturns: The specified WindowedDataset structure.\n\nExample\n\n(let [;; Create a windowed dataset for sensor data with 10-sample capacity\n      column-spec {:timestamp :instant\n                   :temperature :float64\n                   :sensor-id :string}\n      windowed-ds (wd/make-windowed-dataset column-spec 10)]\n\n  ;; **Created windowed dataset:**\n  {:max-size (:max-size windowed-ds)\n   :current-size (:current-size windowed-ds)\n   :current-position (:current-position windowed-ds)\n   :column-types (:column-types windowed-ds)})\n\n\n{:max-size 10,\n :current-size 0,\n :current-position 0,\n :column-types\n {:timestamp :instant, :temperature :float64, :sensor-id :string}}\n\n\n\n\ninsert-to-windowed-dataset!\n[{:as windowed-dataset, :keys [dataset column-types max-size current-position]} value]\nInsert a new row to a WindowedDataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nrow - A row represented as a map structure (can be a record or FastStruct, etc.)\n\nReturns: Updated windowed dataset with its data mutated(!).\n\nExample\n\n(let [;; Create windowed dataset\n      windowed-ds (wd/make-windowed-dataset {:timestamp :instant :temperature :float64 :sensor-id :string} 5)\n      base-time (java-time/instant)\n\n      ;; Insert some data points\n      sample-data [{:timestamp base-time :temperature 22.5 :sensor-id \"temp-001\"}\n                   {:timestamp (java-time/plus base-time (java-time/seconds 30)) :temperature 23.1 :sensor-id \"temp-001\"}\n                   {:timestamp (java-time/plus base-time (java-time/seconds 60)) :temperature 22.8 :sensor-id \"temp-001\"}]\n\n      ;; Insert data step by step\n      wd-step1 (wd/insert-to-windowed-dataset! windowed-ds (first sample-data))\n      wd-step2 (wd/insert-to-windowed-dataset! wd-step1 (second sample-data))\n      final-wd (wd/insert-to-windowed-dataset! wd-step2 (last sample-data))]\n\n  ;; **Windowed dataset after inserting 3 records:**\n  ;; Current size: 3\n  ;; **Data view:**\n  (wd/windowed-dataset-&gt;dataset final-wd))\n\n\n_unnamed [3 3]:\n\n\n\n:timestamp\n:temperature\n:sensor-id\n\n\n\n\n2025-08-07T22:50:54.576029741Z\n22.5\ntemp-001\n\n\n2025-08-07T22:51:24.576029741Z\n23.1\ntemp-001\n\n\n2025-08-07T22:51:54.576029741Z\n22.8\ntemp-001\n\n\n\n\n\n\n\nwindowed-dataset-indices\n[{:keys [max-size current-size current-position]}]\nExtract the row indices for retrieving data from a windowed dataset in insertion order.\nThis utility function encapsulates the logic for determining which rows to select from the underlying dataset to present data in the correct chronological order.\nArgs:\n\nwindowed-dataset - a WindowedDataset\n\nReturns: Vector of integer indices in the correct order for data retrieval\n\nExample\n\n(let [;; Create and populate a small windowed dataset\n      windowed-ds (wd/make-windowed-dataset {:value :int32} 4)\n      ;; Insert 6 items (will wrap around)\n      final-wd (reduce wd/insert-to-windowed-dataset! windowed-ds\n                       (map (fn [i] {:value i}) (range 6)))]\n\n  ;; **Windowed dataset with circular buffer behavior:**\n  ;; Dataset state: size=4, position=2, max=4\n  ;; **Index order for chronological access:**\n  {:indices (wd/windowed-dataset-indices final-wd)\n   ;; **Data in insertion order:**\n   :data (wd/windowed-dataset-&gt;dataset final-wd)})\n\n{:indices [2 3 0 1]\n\n\n\n\n\n\n\n\n:data\n\n\n\n_unnamed [4 1]:\n\n\n\n:value\n\n\n\n\n2\n\n\n3\n\n\n4\n\n\n5\n\n\n\n\n\n\n\n\n}\n\n\n\nwindowed-dataset-&gt;dataset\n[{:as windowed-dataset, :keys [dataset]}]\nReturn a regular dataset as a view over the content of a windowed dataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\n\n\nExample\n\n(let [;; Create windowed dataset with sample sensor data\n      base-time (java-time/instant)\n      sensor-readings (map (fn [i reading]\n                             {:timestamp (java-time/plus base-time (java-time/seconds (* i 30)))\n                              :temperature reading\n                              :reading-id i})\n                           (range 8)\n                           [22.1 22.5 22.8 23.2 22.9 23.1 22.7 22.4])\n      windowed-ds (wd/make-windowed-dataset {:timestamp :instant :temperature :float64 :reading-id :int32} 5)\n      final-wd (reduce wd/insert-to-windowed-dataset! windowed-ds sensor-readings)]\n\n  ;; **Converting windowed dataset to regular dataset:**\n  ;; Inserted 8 temperature readings into 5-capacity window (last 5 retained):\n  (wd/windowed-dataset-&gt;dataset final-wd))\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:temperature\n:reading-id\n\n\n\n\n2025-08-07T22:52:24.584498006Z\n23.2\n3\n\n\n2025-08-07T22:52:54.584498006Z\n22.9\n4\n\n\n2025-08-07T22:53:24.584498006Z\n23.1\n5\n\n\n2025-08-07T22:53:54.584498006Z\n22.7\n6\n\n\n2025-08-07T22:54:24.584498006Z\n22.4\n7\n\n\n\n\n\n\n\nbinary-search-timestamp-start\n[timestamp-col indices target-time]\nBinary search to find the first index where timestamp &gt;= target-time.\nArgs:\n\ntimestamp-col - the timestamp column from the dataset\nindices - vector of indices in chronological order\ntarget-time - the target timestamp to search for\n\nReturns: Index in the indices vector where the search should start\n\nExample\n\n(let [;; Create sample timestamp data\n      base-time (java-time/instant)\n      timestamps (map #(java-time/plus base-time (java-time/seconds (* % 60))) (range 5))\n      timestamp-col (vec timestamps)\n      indices (vec (range 5))\n\n      ;; Search for different target times\n      search-cases [[(java-time/plus base-time (java-time/seconds 90)) \"Between timestamps\"]\n                    [(java-time/plus base-time (java-time/seconds 120)) \"Exact match\"]\n                    [(java-time/minus base-time (java-time/seconds 30)) \"Before all timestamps\"]\n                    [(java-time/plus base-time (java-time/seconds 300)) \"After all timestamps\"]]]\n\n  ;; **Binary search examples:**\n  ;; Timestamps: [formatted times]\n  (map (fn [[target-time description]]\n         {:target-time (str target-time)\n          :description description\n          :found-position (wd/binary-search-timestamp-start timestamp-col indices target-time)})\n       search-cases))\n\n\n({:target-time \"2025-08-07T22:52:24.588222101Z\",\n  :description \"Between timestamps\",\n  :found-position 2}\n {:target-time \"2025-08-07T22:52:54.588222101Z\",\n  :description \"Exact match\",\n  :found-position 2}\n {:target-time \"2025-08-07T22:50:24.588222101Z\",\n  :description \"Before all timestamps\",\n  :found-position 0}\n {:target-time \"2025-08-07T22:55:54.588222101Z\",\n  :description \"After all timestamps\",\n  :found-position 5})\n\n\n\n\nwindowed-dataset-&gt;time-window-dataset\n[{:as windowed-dataset, :keys [dataset]} timestamp-colname time-window]\nReturn a regular dataset as a view over the content of a windowed dataset, including only a recent time window. Uses binary search for optimal performance.\nArgs:\n\nwindowed-dataset - a WindowedDataset\ntimestamp-colname - the name of the column that contains timestamps\ntime-window - window length in ms (from most recent timestamp backwards)\n\nReturns: Dataset containing only data within the specified time window\nPerformance: O(log n) time complexity using binary search\n\nExample\n\n(let [;; Create realistic sensor scenario with timestamps\n      base-time (java-time/instant)\n      readings [22.1 22.3 21.9 22.5 22.2 22.7 22.0 22.4 22.1 21.8 22.2 22.0 22.6 22.1 22.5]\n\n      ;; Create timestamped data (measurements every 30 seconds)\n      sensor-data (map-indexed (fn [i reading]\n                                 {:timestamp (java-time/plus base-time (java-time/seconds (* i 30)))\n                                  :temperature reading\n                                  :reading-id i})\n                               readings)\n\n      windowed-ds (wd/make-windowed-dataset {:timestamp :instant :temperature :float64 :reading-id :int32} 20)\n      final-wd (reduce wd/insert-to-windowed-dataset! windowed-ds sensor-data)]\n\n  ;; **Time window extraction examples:**\n  ;; Created 15 temperature readings over ~7.5 minutes\n\n  ;; **Last 2 minutes of data:**\n  {:last-2-minutes (wd/windowed-dataset-&gt;time-window-dataset final-wd :timestamp 120000)\n\n   ;; **Last 5 minutes of data:**\n   :last-5-minutes (wd/windowed-dataset-&gt;time-window-dataset final-wd :timestamp 300000)\n\n   ;; **All data (10-minute window):**\n   :all-data (-&gt; (wd/windowed-dataset-&gt;time-window-dataset final-wd :timestamp 600000)\n                 (tc/select-columns [:reading-id :temperature]))})\n\n{\n\n\n\n\n\n\n\n\n:last-2-minutes\n\n\n\n_unnamed [5 3]:\n\n\n\n:timestamp\n:temperature\n:reading-id\n\n\n\n\n2025-08-07T22:55:54.601134695Z\n22.2\n10\n\n\n2025-08-07T22:56:24.601134695Z\n22.0\n11\n\n\n2025-08-07T22:56:54.601134695Z\n22.6\n12\n\n\n2025-08-07T22:57:24.601134695Z\n22.1\n13\n\n\n2025-08-07T22:57:54.601134695Z\n22.5\n14\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n:last-5-minutes\n\n\n\n_unnamed [11 3]:\n\n\n\n:timestamp\n:temperature\n:reading-id\n\n\n\n\n2025-08-07T22:52:54.601134695Z\n22.2\n4\n\n\n2025-08-07T22:53:24.601134695Z\n22.7\n5\n\n\n2025-08-07T22:53:54.601134695Z\n22.0\n6\n\n\n2025-08-07T22:54:24.601134695Z\n22.4\n7\n\n\n2025-08-07T22:54:54.601134695Z\n22.1\n8\n\n\n2025-08-07T22:55:24.601134695Z\n21.8\n9\n\n\n2025-08-07T22:55:54.601134695Z\n22.2\n10\n\n\n2025-08-07T22:56:24.601134695Z\n22.0\n11\n\n\n2025-08-07T22:56:54.601134695Z\n22.6\n12\n\n\n2025-08-07T22:57:24.601134695Z\n22.1\n13\n\n\n2025-08-07T22:57:54.601134695Z\n22.5\n14\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n:all-data\n\n\n\n_unnamed [15 2]:\n\n\n\n:reading-id\n:temperature\n\n\n\n\n0\n22.1\n\n\n1\n22.3\n\n\n2\n21.9\n\n\n3\n22.5\n\n\n4\n22.2\n\n\n5\n22.7\n\n\n6\n22.0\n\n\n7\n22.4\n\n\n8\n22.1\n\n\n9\n21.8\n\n\n10\n22.2\n\n\n11\n22.0\n\n\n12\n22.6\n\n\n13\n22.1\n\n\n14\n22.5\n\n\n\n\n\n\n\n\n}\n\n\n\ncopy-windowed-dataset\n[{:as windowed-dataset, :keys [dataset column-types max-size current-size current-position]}]\nCreate a deep copy of a windowed dataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\n\nReturns: New WindowedDataset with copied data\n\nExample\n\n(let [;; Create and populate a windowed dataset\n      base-time (java-time/instant)\n      original-data [{:timestamp base-time :temperature 22.5}\n                     {:timestamp (java-time/plus base-time (java-time/seconds 30)) :temperature 23.1}\n                     {:timestamp (java-time/plus base-time (java-time/seconds 60)) :temperature 22.8}]\n\n      windowed-ds (wd/make-windowed-dataset {:timestamp :instant :temperature :float64} 5)\n      populated-wd (reduce wd/insert-to-windowed-dataset! windowed-ds original-data)\n\n      ;; Create a deep copy\n      copied-wd (wd/copy-windowed-dataset populated-wd)]\n\n  ;; **Deep copy windowed dataset example:**\n  {:original-state {:size (:current-size populated-wd)\n                    :position (:current-position populated-wd)}\n   :copied-state {:size (:current-size copied-wd)\n                  :position (:current-position copied-wd)}\n   :data-identical (= (tc/rows (wd/windowed-dataset-&gt;dataset populated-wd))\n                      (tc/rows (wd/windowed-dataset-&gt;dataset copied-wd)))})\n\n\n{:original-state {:size 3, :position 3},\n :copied-state {:size 3, :position 3},\n :data-identical true}\n\n\n\n\nadd-column-by-windowed-fn\n[time-series {:keys [colname windowed-fn windowed-dataset-size]}]\nAdd a new column to a time-series by applying a windowed function progressively.\nThis function simulates real-time streaming analysis on historical time-series data. For each row in the time-series (processed in timestamp order), it:\n\nInserts the row into a growing windowed dataset\nApplies the windowed function to calculate a result\n\nUses that result as the column value for that row\n\nThis bridges the gap between streaming windowed analysis and batch processing of existing time-series data, allowing you to see how metrics evolve over time as if the data were being processed in real-time.\nArgs:\n\ntime-series - a tablecloth dataset with timestamp-ordered data\noptions - map with keys:\n\n:colname - name of the new column to add\n:windowed-fn - function that takes a WindowedDataset and returns a value\n:windowed-dataset-size - size of the windowed dataset buffer (currently ignored, uses 120)\n\n\nReturns: The original time-series with the new column added, where each row contains the result of applying the windowed function to all data up to that timestamp\nUse Cases: - Adding progressive metrics to time-series - Creating trend analysis columns that consider historical context - Simulating real-time algorithm behavior on historical data - Generating training data with progressive features for ML models\n\nExamples\n\n(let [time-series (tc/dataset {:timestamp [(java-time/instant)\n                                           (java-time/plus (java-time/instant) (java-time/seconds 30))\n                                           (java-time/plus (java-time/instant) (java-time/seconds 60))\n                                           (java-time/plus (java-time/instant) (java-time/seconds 90))]\n                               :value [10.0 20.0 15.0 25.0]})\n\n      ;; Define a simple moving average function\n      moving-avg-fn (fn [windowed-ds]\n                      (let [regular-ds (wd/windowed-dataset-&gt;dataset windowed-ds)\n                            values (:value regular-ds)]\n                        (when (seq values)\n                          (/ (reduce + values) (count values)))))\n\n      result (wd/add-column-by-windowed-fn time-series\n                                           {:colname :moving-avg\n                                            :windowed-fn moving-avg-fn\n                                            :windowed-dataset-size 10})]\n  (tc/select-columns result [:timestamp :value :moving-avg]))\n\n\n_unnamed [4 3]:\n\n\n\n:timestamp\n:value\n:moving-avg\n\n\n\n\n2025-08-07T22:50:54.616251Z\n10.0\n\n\n\n2025-08-07T22:51:24.616253Z\n20.0\n10.0\n\n\n2025-08-07T22:51:54.616268Z\n15.0\n15.0\n\n\n2025-08-07T22:52:24.616270Z\n25.0\n15.0",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>API Reference</span>"
+    ]
+  },
+  {
+    "objectID": "windowed_dataset.api_reference.html#smoothing-functions",
+    "href": "windowed_dataset.api_reference.html#smoothing-functions",
+    "title": "API Reference",
+    "section": "Smoothing Functions",
+    "text": "Smoothing Functions\n\nmoving-average\n[windowed-dataset window-size value-colname]\nCalculate simple moving average of recent data in windowed dataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nwindow-size - number of recent samples to average\nvalue-colname - column name containing values to be processed\n\nReturns: Moving average of the most recent window-size samples, or nil if insufficient data\n\nExample\n\n(let [wd (wd/make-windowed-dataset {:x :int32} 10)\n      data [{:x 800} {:x 850} {:x 820}]\n      populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]\n  (wd/moving-average populated-wd 3 :x))\n\n\n2470/3\n\n\n\n\nmedian-filter\n[windowed-dataset window-size value-colname]\nApply median filter to the most recent data in a windowed dataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nwindow-size - number of recent samples to use for median calculation\nvalue-colname - column name containing values to be processed\n\nReturns: Median value of the most recent window-size samples, or nil if insufficient data\n\nExample\n\n(let [wd (wd/make-windowed-dataset {:x :int32} 10)\n      data [{:x 800} {:x 1200} {:x 820}] ; middle value is outlier\n      populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]\n  (wd/median-filter populated-wd 3 :x))\n\n\n820\n\n\n\n\ncascaded-median-filter\n[windowed-dataset value-colname]\nApply cascaded median filters (3-point then 5-point) for robust smoothing.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nvalue-colname - column name containing values to be processed\n\nReturns: Cascaded median filtered value, or nil if insufficient data (needs 5+ samples)\n\nExample\n\n(let [wd (wd/make-windowed-dataset {:x :int32} 10)\n      data [{:x 800} {:x 1200} {:x 820} {:x 1100} {:x 810}]\n      populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]\n  (wd/cascaded-median-filter populated-wd :x))\n\n\n820\n\n\n\n\nexponential-moving-average\n[windowed-dataset alpha value-colname]\nCalculate exponential moving average of recent data in windowed dataset.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nalpha - smoothing factor (0 &lt; alpha &lt;= 1, higher = more responsive)\nvalue-colname - column name containing values to be processed\n\nReturns: EMA value, or nil if no data available\n\nExample\n\n(let [wd (wd/make-windowed-dataset {:x :int32} 10)\n      data [{:x 800} {:x 850} {:x 820}]\n      populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]\n  (wd/exponential-moving-average populated-wd 0.3 :x))\n\n\n816.5\n\n\n\n\ncascaded-smoothing-filter\n[windowed-dataset median-window ma-window value-colname]\nApply cascaded smoothing: median filter followed by moving average.\nThis combines the outlier-removal power of median filtering with the noise-reduction benefits of moving averages for comprehensive cleaning.\nArgs:\n\nwindowed-dataset - a WindowedDataset\nmedian-window - window size for median filter\nma-window - window size for moving average\nvalue-colname - column name containing values to be processed\n\nReturns: Final smoothed value, or nil if insufficient data\n\nExample\n\n(let [wd (wd/make-windowed-dataset {:x :int32} 15)\n      ;; Data with noise and outliers\n      data [{:x 800} {:x 820} {:x 1500} {:x 810}\n            {:x 805} {:x 815} {:x 2000} {:x 812}\n            {:x 808} {:x 795}]\n      populated-wd (reduce wd/insert-to-windowed-dataset! wd data)]\n\n  ;; Compare cascaded smoothing with individual methods\n  {:median-only (wd/median-filter populated-wd 5 :x)\n   :moving-avg-only (wd/moving-average populated-wd 5 :x)\n   :cascaded-5-3 (wd/cascaded-smoothing-filter populated-wd 5 3 :x)})\n\n\n{:median-only 812, :moving-avg-only 1046, :cascaded-5-3 805.0}\n\n\nsource: notebooks/api_reference.clj",
+    "crumbs": [
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>API Reference</span>"
+    ]
+  }
+]

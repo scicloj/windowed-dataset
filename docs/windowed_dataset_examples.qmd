@@ -1,0 +1,513 @@
+---
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    theme: [cosmo, notebooks/custom.scss]
+    number-sections: false
+    output-file: windowed_dataset_examples.html
+code-block-background: true
+
+---
+<style></style><style>.printedClojure .sourceCode {
+  background-color: transparent;
+  border-style: none;
+}
+</style><style>.clay-limit-image-width .clay-image {max-width: 100%}
+.clay-side-by-side .sourceCode {margin: 0}
+.clay-side-by-side {margin: 1em 0}
+</style>
+<script src="windowed_dataset_examples_files/md-default0.js" type="text/javascript"></script><script src="windowed_dataset_examples_files/md-default1.js" type="text/javascript"></script>
+
+::: {.sourceClojure}
+```clojure
+(ns windowed-dataset-examples
+  "Examples and demonstrations of windowed dataset functionality.
+  
+  This notebook showcases the core capabilities of the windowed-dataset library
+  for streaming data analysis and time-series processing."
+  (:require [scicloj.windowed-dataset.api :as wd]
+            [tablecloth.api :as tc]
+            [tablecloth.column.api :as tcc]
+            [java-time.api :as java-time]
+            [scicloj.kindly.v4.kind :as kind]
+            [tech.v3.datatype.functional :as dfn]))
+```
+:::
+
+
+
+# Windowed Dataset Examples
+
+This notebook demonstrates the core functionality of windowed datasets
+for streaming data analysis and time-series processing.
+
+
+## Basic Usage
+
+Create a simple windowed dataset with timestamp and value columns
+
+
+::: {.sourceClojure}
+```clojure
+(def sample-column-types
+  {:timestamp :instant
+   :value :float64
+   :sensor-id :string})
+```
+:::
+
+
+Create a windowed dataset with maximum size of 5 records
+
+
+::: {.sourceClojure}
+```clojure
+(def windowed-ds
+  (wd/make-windowed-dataset sample-column-types 5))
+```
+:::
+
+
+**Initial windowed dataset:**
+
+
+::: {.sourceClojure}
+```clojure
+windowed-ds
+```
+:::
+
+
+
+```{=html}
+<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:dataset
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr><tr><td></td><td style="text-align:right;">0.0</td><td></td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:column-types {:timestamp :instant, :value :float64, :sensor-id :string}</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:max-size 5</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-size 0</code></pre></div><div><pre><code class="sourceCode language-clojure printed-clojure">:current-position 0</code></pre></div></div><p>}</p></div>
+```
+
+
+
+## Inserting Data
+
+Let's create some sample time-series data
+
+
+::: {.sourceClojure}
+```clojure
+(def sample-data
+  (let [start-time (java-time/instant)]
+    (map (fn [i]
+           {:timestamp (java-time/plus start-time (java-time/seconds i))
+            :value (+ 10.0 (* 2.0 (Math/sin (/ i 2.0))))
+            :sensor-id "sensor-1"})
+         (range 10))))
+```
+:::
+
+
+**Sample time-series data (first 5 rows):**
+
+
+::: {.sourceClojure}
+```clojure
+(tc/dataset (take 5 sample-data))
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [5 3]:
+
+|                  :timestamp |      :value | :sensor-id |
+|-----------------------------|------------:|------------|
+| 2025-08-07T22:50:54.238091Z | 10.00000000 |   sensor-1 |
+| 2025-08-07T22:50:55.238091Z | 10.95885108 |   sensor-1 |
+| 2025-08-07T22:50:56.238091Z | 11.68294197 |   sensor-1 |
+| 2025-08-07T22:50:57.238091Z | 11.99498997 |   sensor-1 |
+| 2025-08-07T22:50:58.238091Z | 11.81859485 |   sensor-1 |
+
+
+:::
+
+
+Insert data progressively and observe the windowed dataset behavior
+
+
+::: {.sourceClojure}
+```clojure
+(defn demonstrate-progressive-insertion []
+  (reduce (fn [acc-ds row]
+            (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
+                  regular-ds (wd/windowed-dataset->dataset updated-ds)]
+              (println (str "After inserting row with value " (:value row) ":"))
+              (println (str "  Window size: " (:current-size updated-ds)))
+              (println (str "  Current position: " (:current-position updated-ds)))
+              (println (str "  Data in window: " (vec (:value regular-ds))))
+              (println)
+              updated-ds))
+          windowed-ds
+          (take 8 sample-data)))
+```
+:::
+
+
+**Progressive insertion demonstration:**
+
+
+::: {.sourceClojure}
+```clojure
+(kind/code
+ (with-out-str (demonstrate-progressive-insertion)))
+```
+:::
+
+
+
+::: {.sourceClojure}
+```clojure
+After inserting row with value 10.0:
+  Window size: 1
+  Current position: 1
+  Data in window: [10.0]
+
+After inserting row with value 10.958851077208406:
+  Window size: 2
+  Current position: 2
+  Data in window: [10.0 10.958851077208406]
+
+After inserting row with value 11.682941969615793:
+  Window size: 3
+  Current position: 3
+  Data in window: [10.0 10.958851077208406 11.682941969615793]
+
+After inserting row with value 11.994989973208108:
+  Window size: 4
+  Current position: 4
+  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108]
+
+After inserting row with value 11.818594853651364:
+  Window size: 5
+  Current position: 0
+  Data in window: [10.0 10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364]
+
+After inserting row with value 11.196944288207913:
+  Window size: 5
+  Current position: 1
+  Data in window: [10.958851077208406 11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913]
+
+After inserting row with value 10.282240016119735:
+  Window size: 5
+  Current position: 2
+  Data in window: [11.682941969615793 11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735]
+
+After inserting row with value 9.29843354462076:
+  Window size: 5
+  Current position: 3
+  Data in window: [11.994989973208108 11.818594853651364 11.196944288207913 10.282240016119735 9.29843354462076]
+
+
+```
+:::
+
+
+
+## Time Window Functionality
+
+Create a windowed dataset with more data for time window examples
+
+
+::: {.sourceClojure}
+```clojure
+(def full-windowed-ds
+  (reduce wd/insert-to-windowed-dataset! windowed-ds sample-data))
+```
+:::
+
+
+**Full windowed dataset converted to regular dataset:**
+
+
+::: {.sourceClojure}
+```clojure
+(wd/windowed-dataset->dataset full-windowed-ds)
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [5 3]:
+
+|                     :timestamp |      :value | :sensor-id |
+|--------------------------------|------------:|------------|
+| 2025-08-07T22:50:59.238091095Z | 11.19694429 |   sensor-1 |
+| 2025-08-07T22:51:00.238091095Z | 10.28224002 |   sensor-1 |
+| 2025-08-07T22:51:01.238091095Z |  9.29843354 |   sensor-1 |
+| 2025-08-07T22:51:02.238091095Z |  8.48639501 |   sensor-1 |
+| 2025-08-07T22:51:03.238091095Z |  8.04493976 |   sensor-1 |
+
+
+:::
+
+
+Demonstrate time window extraction
+
+
+::: {.sourceClojure}
+```clojure
+(let [regular-ds (wd/windowed-dataset->dataset full-windowed-ds)
+      latest-time (last (:timestamp regular-ds))]
+  ;; **Time window examples:**
+  {:last-3-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 3000)
+   :last-5-seconds (wd/windowed-dataset->time-window-dataset full-windowed-ds :timestamp 5000)
+   :latest-timestamp latest-time})
+```
+:::
+
+
+
+```{=html}
+<div><p>{</p><div class="clay-map" style="margin-left:10%;width:110%;"><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-3-seconds
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [4 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td>2025-08-07T22:51:00.238091095Z</td><td style="text-align:right;">10.28224002</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:01.238091095Z</td><td style="text-align:right;">9.29843354</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:02.238091095Z</td><td style="text-align:right;">8.48639501</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:03.238091095Z</td><td style="text-align:right;">8.04493976</td><td>sensor-1</td></tr></tbody></table></div></div></td></tr></table><table><tr><td valign="top"><div><pre><code class="sourceCode language-clojure printed-clojure">:last-5-seconds
+</code></pre></div></td><td><div style="margin-left:10px;"><div class="clay-dataset"><p>_unnamed [5 3]:</p><table class="table"><thead><tr><th>:timestamp</th><th style="text-align:right;">:value</th><th>:sensor-id</th></tr></thead><tbody><tr><td>2025-08-07T22:50:59.238091095Z</td><td style="text-align:right;">11.19694429</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:00.238091095Z</td><td style="text-align:right;">10.28224002</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:01.238091095Z</td><td style="text-align:right;">9.29843354</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:02.238091095Z</td><td style="text-align:right;">8.48639501</td><td>sensor-1</td></tr><tr><td>2025-08-07T22:51:03.238091095Z</td><td style="text-align:right;">8.04493976</td><td>sensor-1</td></tr></tbody></table></div></div></td></tr></table><div><pre><code class="sourceCode language-clojure printed-clojure">:latest-timestamp #inst &quot;2025-08-07T22:51:03.238091095-00:00&quot;</code></pre></div></div><p>}</p></div>
+```
+
+
+
+## Real-time Streaming Simulation
+
+Demonstrate how windowed datasets can be used for streaming analysis
+
+
+::: {.sourceClojure}
+```clojure
+(defn calculate-moving-average [windowed-ds]
+  "Calculate moving average from a windowed dataset"
+  (let [regular-ds (wd/windowed-dataset->dataset windowed-ds)
+        values (:value regular-ds)]
+    (when (seq values)
+      (dfn/mean values))))
+```
+:::
+
+
+Simulate streaming analysis with moving averages
+
+
+::: {.sourceClojure}
+```clojure
+(defn streaming-analysis-demo []
+  (let [results (atom [])]
+    (reduce (fn [acc-ds row]
+              (let [updated-ds (wd/insert-to-windowed-dataset! acc-ds row)
+                    moving-avg (calculate-moving-average updated-ds)]
+                (swap! results conj {:timestamp (:timestamp row)
+                                     :value (:value row)
+                                     :moving-average moving-avg})
+                updated-ds))
+            windowed-ds
+            sample-data)
+    @results))
+```
+:::
+
+
+**Streaming analysis with moving averages:**
+
+
+::: {.sourceClojure}
+```clojure
+(tc/dataset (streaming-analysis-demo))
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [10 3]:
+
+|                  :timestamp |      :value | :moving-average |
+|-----------------------------|------------:|----------------:|
+| 2025-08-07T22:50:54.238091Z | 10.00000000 |     10.00000000 |
+| 2025-08-07T22:50:55.238091Z | 10.95885108 |     10.47942554 |
+| 2025-08-07T22:50:56.238091Z | 11.68294197 |     10.88059768 |
+| 2025-08-07T22:50:57.238091Z | 11.99498997 |     11.15919576 |
+| 2025-08-07T22:50:58.238091Z | 11.81859485 |     11.29107557 |
+| 2025-08-07T22:50:59.238091Z | 11.19694429 |     11.53046443 |
+| 2025-08-07T22:51:00.238091Z | 10.28224002 |     11.39514222 |
+| 2025-08-07T22:51:01.238091Z |  9.29843354 |     10.91824054 |
+| 2025-08-07T22:51:02.238091Z |  8.48639501 |     10.21652154 |
+| 2025-08-07T22:51:03.238091Z |  8.04493976 |      9.46179052 |
+
+
+:::
+
+
+
+## Advanced Example: Progressive Column Addition
+
+Demonstrate add-column-by-windowed-fn for batch processing
+
+
+::: {.sourceClojure}
+```clojure
+(def time-series-data
+  (tc/dataset {:timestamp (map #(java-time/plus (java-time/instant) (java-time/seconds %)) (range 10))
+               :value (map #(+ 5.0 (* 3.0 (Math/sin (/ % 1.5)))) (range 10))
+               :noise (repeatedly 10 #(* 0.5 (- (rand) 0.5)))}))
+```
+:::
+
+
+**Original time series:**
+
+
+::: {.sourceClojure}
+```clojure
+time-series-data
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [10 3]:
+
+|                  :timestamp |     :value |      :noise |
+|-----------------------------|-----------:|------------:|
+| 2025-08-07T22:50:54.271095Z | 5.00000000 |  0.17921910 |
+| 2025-08-07T22:50:55.271149Z | 6.85510941 |  0.11550950 |
+| 2025-08-07T22:50:56.271154Z | 7.91581370 |  0.18040711 |
+| 2025-08-07T22:50:57.271156Z | 7.72789228 | -0.20914995 |
+| 2025-08-07T22:50:58.271158Z | 6.37181788 | -0.02834836 |
+| 2025-08-07T22:50:59.271160Z | 4.42829611 |  0.08674079 |
+| 2025-08-07T22:51:00.271162Z | 2.72959251 |  0.17570259 |
+| 2025-08-07T22:51:01.271164Z | 2.00313525 |  0.11306764 |
+| 2025-08-07T22:51:02.271166Z | 2.56001183 |  0.05813438 |
+| 2025-08-07T22:51:03.271169Z | 4.16175351 | -0.14664493 |
+
+
+:::
+
+
+Add progressive moving average column
+
+
+::: {.sourceClojure}
+```clojure
+(def windowed-moving-avg-fn
+  (fn [windowed-ds]
+    (calculate-moving-average windowed-ds)))
+```
+:::
+
+
+**Time series with progressive moving average:**
+
+
+::: {.sourceClojure}
+```clojure
+(wd/add-column-by-windowed-fn
+ time-series-data
+ {:colname :progressive-moving-avg
+  :windowed-fn windowed-moving-avg-fn
+  :windowed-dataset-size 120})
+```
+:::
+
+
+::: {.clay-dataset}
+_unnamed [10 4]:
+
+|                  :timestamp |     :value |      :noise | :progressive-moving-avg |
+|-----------------------------|-----------:|------------:|------------------------:|
+| 2025-08-07T22:50:54.271095Z | 5.00000000 |  0.17921910 |                         |
+| 2025-08-07T22:50:55.271149Z | 6.85510941 |  0.11550950 |              5.00000000 |
+| 2025-08-07T22:50:56.271154Z | 7.91581370 |  0.18040711 |              5.92755470 |
+| 2025-08-07T22:50:57.271156Z | 7.72789228 | -0.20914995 |              6.59030770 |
+| 2025-08-07T22:50:58.271158Z | 6.37181788 | -0.02834836 |              6.87470385 |
+| 2025-08-07T22:50:59.271160Z | 4.42829611 |  0.08674079 |              6.77412665 |
+| 2025-08-07T22:51:00.271162Z | 2.72959251 |  0.17570259 |              6.38315490 |
+| 2025-08-07T22:51:01.271164Z | 2.00313525 |  0.11306764 |              5.86121741 |
+| 2025-08-07T22:51:02.271166Z | 2.56001183 |  0.05813438 |              5.37895714 |
+| 2025-08-07T22:51:03.271169Z | 4.16175351 | -0.14664493 |              5.06574100 |
+
+
+:::
+
+
+
+## Performance Characteristics
+
+Demonstrate that windowed datasets maintain constant memory usage
+
+
+::: {.sourceClojure}
+```clojure
+(defn memory-usage-demo []
+  (let [large-dataset (map (fn [i]
+                             {:timestamp (java-time/plus (java-time/instant) (java-time/millis i))
+                              :value (rand)
+                              :sensor-id "perf-test"})
+                           (range 1000))
+        windowed-ds-small (wd/make-windowed-dataset sample-column-types 10)
+        windowed-ds-large (wd/make-windowed-dataset sample-column-types 100)]
+
+    {:small-window {:max-size 10
+                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-small large-dataset))}
+     :large-window {:max-size 100
+                    :final-size (:current-size (reduce wd/insert-to-windowed-dataset! windowed-ds-large large-dataset))}
+     :input-data-size (count large-dataset)}))
+```
+:::
+
+
+**Memory usage demonstration:**
+
+
+::: {.sourceClojure}
+```clojure
+(memory-usage-demo)
+```
+:::
+
+
+
+::: {.printedClojure}
+```clojure
+{:small-window {:max-size 10, :final-size 10},
+ :large-window {:max-size 100, :final-size 100},
+ :input-data-size 1000}
+
+```
+:::
+
+
+
+## Summary
+
+
+## Key Benefits of Windowed Datasets
+
+- **Constant Memory Usage**: Fixed-size circular buffer regardless of input stream size
+- **Efficient Time Windows**: O(log n) binary search for time-based filtering  
+- **Streaming-Friendly**: Designed for real-time data processing
+- **Tablecloth Integration**: Seamless conversion to/from regular datasets
+- **High Performance**: Built on `tech.ml.dataset` for efficient numeric operations
+
+
+## Common Use Cases
+
+1. **Real-time Analytics**: Moving averages, trend detection, anomaly detection
+2. **Streaming ML**: Feature engineering for time-series models
+3. **Sensor Data Processing**: IoT and monitoring applications
+4. **Financial Data**: Technical indicators and risk metrics
+5. **Scientific Computing**: Signal processing and time-series analysis
+
+
+```{=html}
+<div style="background-color:grey;height:2px;width:100%;"></div>
+```
+
+
+
+```{=html}
+<div><pre><small><small>source: <a href="https://github.com/scicloj/windowed-dataset/blob/main/notebooks/windowed_dataset_examples.clj">notebooks/windowed_dataset_examples.clj</a></small></small></pre></div>
+```

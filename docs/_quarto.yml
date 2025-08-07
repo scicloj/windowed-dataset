@@ -1,0 +1,11 @@
+format:
+  html:
+    toc: true
+    toc-depth: 4
+    theme: [cosmo, notebooks/custom.scss]
+    number-sections: false
+  revealjs: {theme: solarized, navigation-mode: vertical, transition: slide, background-transition: fade, incremental: true}
+project: {type: book}
+book:
+  chapters: [index.qmd, windowed_dataset_examples.qmd, windowed_dataset.api_reference.qmd]
+  title: Windowed dataset
